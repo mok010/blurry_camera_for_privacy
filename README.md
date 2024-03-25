@@ -99,5 +99,9 @@ TotalCaloriesBurnedRecord
 
 구조체 리스트를 csv 파일로 변환하기 위해서는 먼저 구조체리스트를 데이터 프레임화 시켜주고 그 후에 이를 csv 파일로 변환할 필요성이 있다. 
 
+## Work Flow Diagram
+
+![team  날개 스마트워치를 활용한 치매 고위험군 분류 모델](https://github.com/mok010/dementia_classification/assets/76732607/b71835d3-a520-409c-9528-b841b6201e20)
+
 
 
