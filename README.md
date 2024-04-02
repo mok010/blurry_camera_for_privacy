@@ -82,7 +82,7 @@ TotalCaloriesBurnedRecord
 심박수와 같은 통계적 데이터 (Statistical), 달에 뛴 횟수와 같은 세기 데이터 (Count), 걸음수와 같은 누적 데이터 (Comulative), 딥슬립의 시간과 같은 기간 데이터 (Duration)이다.
 
 통계적 데이터 (Statistical)
-세기 데이터 (Count),
+세기 데이터 (Count)
 누적 데이터 (Comulative)
 기간 데이터 (Duration)
 
