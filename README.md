@@ -103,6 +103,8 @@ TotalCaloriesBurnedRecord
 
 ![team  날개 스마트워치를 활용한 치매 고위험군 분류 모델](https://github.com/mok010/dementia_classification/assets/76732607/b71835d3-a520-409c-9528-b841b6201e20)
 
+
+
 ## 안드로이드 앱 샘플
 
 https://ovenapp.io/view/b3zamLxubR4h8A70FHwrAs9RV0g08GbO/
