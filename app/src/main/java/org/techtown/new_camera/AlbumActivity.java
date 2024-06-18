@@ -1,20 +1,16 @@
-package org.techtown.a3rdpage;
+package org.techtown.new_camera;
 
 import android.app.ProgressDialog;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ImageDecoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -26,7 +22,6 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
-import java.io.InputStream;
 
 public class AlbumActivity extends AppCompatActivity {
 
