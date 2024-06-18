@@ -1,6 +1,5 @@
 package org.techtown.new_camera;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,7 +17,6 @@ import android.media.Image;
 import android.media.ImageReader;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Size;
@@ -30,7 +28,6 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
@@ -65,9 +62,7 @@ public class MainActivity extends AppCompatActivity {
     String fileName = "IMG_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date()) + ".jpg";
 
     // 카메라 사용 권한 요청 코드
-    //private static final int REQUEST_CAMERA_PERMISSION = 200;
-
-    private static final int PERMISSIONS_REQUEST_CODE = 22;
+    private static final int REQUEST_CAMERA_PERMISSION = 200;
 
     private String cameraId;
     private boolean isFrontCamera = false;
@@ -131,11 +126,6 @@ public class MainActivity extends AppCompatActivity {
         ImageButton rotateButton = findViewById(R.id.btn_rotate);
         ImageButton albumButton = findViewById(R.id.btn_album);
 
-        //권한요청 확인함
-        if (chkPermission()){
-            Toast.makeText(this, "위험 권한 승인함", Toast.LENGTH_SHORT).show();
-        }
-
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -147,8 +137,7 @@ public class MainActivity extends AppCompatActivity {
         albumButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 앨범쪽으로 연결했습니다.
-                Intent intent = new Intent(getApplicationContext(),AlbumActivity.class);
+                Intent intent = new Intent(getApplicationContext(),MainActivity3.class);
                 startActivity(intent);
             }
         });
@@ -234,14 +223,11 @@ public class MainActivity extends AppCompatActivity {
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         getCameraId();
         try {
-
             // 카메라 권한 체크
             if (ActivityCompat.checkSelfPermission(this, "android.permission.CAMERA") != PackageManager.PERMISSION_GRANTED) {
-                //ActivityCompat.requestPermissions(this, new String[]{"android.permission.CAMERA"}, REQUEST_CAMERA_PERMISSION);
-                //카메라 권한 요청을 chkPermission으로 요청합니다.
+                ActivityCompat.requestPermissions(this, new String[]{"android.permission.CAMERA"}, REQUEST_CAMERA_PERMISSION);
                 return;
             }
-
             // 카메라 오픈, 상태 콜백과 핸들러 설정
             manager.openCamera(cameraId, stateCallback, null);
         } catch (CameraAccessException e) {
@@ -390,62 +376,5 @@ public class MainActivity extends AppCompatActivity {
         }
         isFrontCamera = !isFrontCamera;
         openCamera();
-    }
-
-    //권한 요청하는 메소드들입니다. 현재, 저장소의 이미지 접근이랑, 카메라 권한 요청합니다.
-    public boolean chkPermission() {
-        // 위험 권한을 모두 승인했는지 여부
-        boolean mPermissionsGranted = false;
-        // 승인 받기 위한 권한 목록
-        String[] mRequiredPermissions = new String[]{
-                Manifest.permission.READ_MEDIA_IMAGES,
-                Manifest.permission.CAMERA
-        };
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // 필수 권한을 가지고 있는지 확인한다.
-            mPermissionsGranted = hasPermissions(mRequiredPermissions);
-
-            // 필수 권한 중에 한 개라도 없는 경우
-            if (!mPermissionsGranted) {
-                // 권한을 요청한다.
-                ActivityCompat.requestPermissions(MainActivity.this, mRequiredPermissions, PERMISSIONS_REQUEST_CODE);
-            }
-        } else {
-            mPermissionsGranted = true;
-        }
-
-        return mPermissionsGranted;
-    }
-
-    public boolean hasPermissions(String[] permissions) {
-        // 필수 권한을 가지고 있는지 확인한다.
-        for (String permission : permissions) {
-            if (checkCallingOrSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == PERMISSIONS_REQUEST_CODE) {
-            // 권한을 모두 승인했는지 여부
-            boolean chkFlag = false;
-            // 승인한 권한은 0 값, 승인 안한 권한은 -1을 값으로 가진다.
-            for (int g : grantResults) {
-                if (g == -1) {
-                    chkFlag = true;
-                    break;
-                }
-            }
-
-            // 권한 중 한 개라도 승인 안 한 경우
-            if (chkFlag){
-                chkPermission();
-            }
-        }
     }
 }
