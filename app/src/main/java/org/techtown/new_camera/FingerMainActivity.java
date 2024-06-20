@@ -1,5 +1,6 @@
 package org.techtown.new_camera;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -75,6 +76,8 @@ public class FingerMainActivity extends AppCompatActivity {
         // Setup buttons
         Button buttonIris = findViewById(R.id.button4);
         Button buttonFingerprint = findViewById(R.id.button3);
+        Button buttonCamera = findViewById(R.id.button2);  // "카메라" 버튼
+        Button buttonAlbum = findViewById(R.id.button);  // "앨범" 버튼
 
         buttonIris.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -91,6 +94,24 @@ public class FingerMainActivity extends AppCompatActivity {
                 isFingerprintBlurringOn = !isFingerprintBlurringOn;
                 buttonFingerprint.setText(isFingerprintBlurringOn ? "지문 블러링 ON" : "지문 블러링 OFF");
                 buttonFingerprint.setBackgroundResource(isFingerprintBlurringOn ? R.drawable.rounded_button_blue : R.drawable.rounded_button_grey);
+            }
+        });
+
+        buttonCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // MainActivity로 이동하는 Intent 생성
+                Intent intent = new Intent(FingerMainActivity.this, MainActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        buttonAlbum.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // AlbumActivity로 이동하는 Intent 생성
+                Intent intent = new Intent(FingerMainActivity.this, AlbumActivity.class);
+                startActivity(intent);
             }
         });
     }
