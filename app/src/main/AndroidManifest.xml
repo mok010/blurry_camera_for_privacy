@@ -24,6 +24,9 @@
             android:name=".AlbumActivity"
             android:exported="false" />
         <activity
+            android:name=".ImageProcessor"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity3"
             android:exported="false" />
         <activity
