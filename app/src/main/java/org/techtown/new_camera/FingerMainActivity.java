@@ -100,8 +100,8 @@ public class FingerMainActivity extends AppCompatActivity {
         buttonCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // MainActivity로 이동하는 Intent 생성
-                Intent intent = new Intent(FingerMainActivity.this, MainActivity.class);
+                Intent intent = new Intent(FingerMainActivity.this, TransitionActivity.class);
+                intent.putExtra("next_activity", "MainActivity");
                 startActivity(intent);
             }
         });
@@ -109,8 +109,8 @@ public class FingerMainActivity extends AppCompatActivity {
         buttonAlbum.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // AlbumActivity로 이동하는 Intent 생성
-                Intent intent = new Intent(FingerMainActivity.this, AlbumActivity.class);
+                Intent intent = new Intent(FingerMainActivity.this, TransitionActivity.class);
+                intent.putExtra("next_activity", "AlbumActivity");
                 startActivity(intent);
             }
         });

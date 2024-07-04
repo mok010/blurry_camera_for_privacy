@@ -4,10 +4,9 @@
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <uses-feature android:name="android.hardware.camera" />
-
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
         android:allowBackup="true"
@@ -24,9 +23,6 @@
             android:name=".AlbumActivity"
             android:exported="false" />
         <activity
-            android:name=".ImageProcessor"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity3"
             android:exported="false" />
         <activity
@@ -37,6 +33,12 @@
             android:exported="true" />
         <activity
             android:name=".FingerMainActivity"
+            android:exported="true" />
+        <activity
+            android:name=".TransitionActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LoadingActivity"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
