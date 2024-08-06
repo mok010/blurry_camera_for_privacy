@@ -23,6 +23,12 @@
             android:name=".AlbumActivity"
             android:exported="false" />
         <activity
+            android:name=".MainActivity1"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity4"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity3"
             android:exported="false" />
         <activity
