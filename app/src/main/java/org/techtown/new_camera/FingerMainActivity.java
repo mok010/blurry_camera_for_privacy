@@ -1,6 +1,7 @@
 package org.techtown.new_camera;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
@@ -13,6 +14,9 @@ import androidx.viewpager2.widget.ViewPager2;
 import me.relex.circleindicator.CircleIndicator3;
 
 public class FingerMainActivity extends AppCompatActivity {
+
+    private static final String PREFS_NAME = "BlurPrefs";
+    private static final String KEY_IRIS_BLURRING = "iris_blurring";
 
     private ViewPager2 mPager;
     private FragmentStateAdapter pagerAdapter;
@@ -79,12 +83,24 @@ public class FingerMainActivity extends AppCompatActivity {
         Button buttonCamera = findViewById(R.id.button2);  // "카메라" 버튼
         Button buttonAlbum = findViewById(R.id.button);  // "앨범" 버튼
 
+        // SharedPreferences 초기화
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        isIrisBlurringOn = prefs.getBoolean(KEY_IRIS_BLURRING, true);
+
+        buttonIris.setText(isIrisBlurringOn ? "홍채 블러링 ON" : "홍채 블러링 OFF");
+        buttonIris.setBackgroundResource(isIrisBlurringOn ? R.drawable.rounded_button_blue : R.drawable.rounded_button_grey);
+
         buttonIris.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 isIrisBlurringOn = !isIrisBlurringOn;
                 buttonIris.setText(isIrisBlurringOn ? "홍채 블러링 ON" : "홍채 블러링 OFF");
                 buttonIris.setBackgroundResource(isIrisBlurringOn ? R.drawable.rounded_button_blue : R.drawable.rounded_button_grey);
+
+                // 상태 저장
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putBoolean(KEY_IRIS_BLURRING, isIrisBlurringOn);
+                editor.apply();
             }
         });
 

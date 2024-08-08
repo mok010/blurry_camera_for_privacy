@@ -3,6 +3,7 @@ package org.techtown.new_camera;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -12,6 +13,7 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.view.View;
@@ -19,20 +21,16 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
-import android.os.Handler;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
-
-import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.FaceLandmark;
-
-import org.techtown.new_camera.ImageProcessor;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
@@ -40,6 +38,10 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public class AlbumActivity extends AppCompatActivity {
+
+    private static final String PREFS_NAME = "BlurPrefs";
+    private static final String KEY_IRIS_BLURRING = "iris_blurring";
+    private boolean isIrisBlurringOn;
 
     ImageView imageView;
     FrameLayout frameLayout;  // 커스텀 뷰를 추가할 레이아웃
@@ -56,6 +58,10 @@ public class AlbumActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // SharedPreferences 초기화
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        isIrisBlurringOn = prefs.getBoolean(KEY_IRIS_BLURRING, true);
 
         // 이전 화면으로 돌아가는 버튼
         Button button = findViewById(R.id.button);
@@ -111,7 +117,7 @@ public class AlbumActivity extends AppCompatActivity {
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        CustomView customView = new CustomView(AlbumActivity.this, photoBitmap, faces);
+                                        CustomView customView = new CustomView(AlbumActivity.this, photoBitmap, faces, isIrisBlurringOn);
                                         frameLayout.addView(customView);  // CustomView 추가
                                     }
                                 });
@@ -165,11 +171,13 @@ public class AlbumActivity extends AppCompatActivity {
         private Bitmap bitmap;
         private List<Face> faces;
         private Paint paint;
+        private boolean isIrisBlurringOn;
 
-        public CustomView(Context context, Bitmap bitmap, List<Face> faces) {
+        public CustomView(Context context, Bitmap bitmap, List<Face> faces, boolean isIrisBlurringOn) {
             super(context);
             this.bitmap = bitmap;
             this.faces = faces;
+            this.isIrisBlurringOn = isIrisBlurringOn;
             this.paint = new Paint();
             paint.setColor(Color.BLACK);
             paint.setStyle(Paint.Style.FILL);
@@ -199,24 +207,26 @@ public class AlbumActivity extends AppCompatActivity {
 
             // 얼굴 인식 결과를 그립니다.
             for (Face face : faces) {
-                float eyeRadius = face.getBoundingBox().width() * 0.03f; // 얼굴 너비의 3%를 눈의 반지름으로 사용
+                if (isIrisBlurringOn) {
+                    float eyeRadius = face.getBoundingBox().width() * 0.03f; // 얼굴 너비의 3%를 눈의 반지름으로 사용
 
-                // 왼쪽 눈의 위치를 가져옵니다.
-                FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
-                if (leftEye != null) {
-                    PointF leftEyePos = leftEye.getPosition();
-                    float leftEyeX = left + leftEyePos.x * scale;
-                    float leftEyeY = top + leftEyePos.y * scale;
-                    canvas.drawCircle(leftEyeX, leftEyeY, eyeRadius, paint);  // 눈의 크기만큼 원을 그립니다.
-                }
+                    // 왼쪽 눈의 위치를 가져옵니다.
+                    FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
+                    if (leftEye != null) {
+                        PointF leftEyePos = leftEye.getPosition();
+                        float leftEyeX = left + leftEyePos.x * scale;
+                        float leftEyeY = top + leftEyePos.y * scale;
+                        canvas.drawCircle(leftEyeX, leftEyeY, eyeRadius, paint);  // 눈의 크기만큼 원을 그립니다.
+                    }
 
-                // 오른쪽 눈의 위치를 가져옵니다.
-                FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
-                if (rightEye != null) {
-                    PointF rightEyePos = rightEye.getPosition();
-                    float rightEyeX = left + rightEyePos.x * scale;
-                    float rightEyeY = top + rightEyePos.y * scale;
-                    canvas.drawCircle(rightEyeX, rightEyeY, eyeRadius, paint);  // 눈의 크기만큼 원을 그립니다.
+                    // 오른쪽 눈의 위치를 가져옵니다.
+                    FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
+                    if (rightEye != null) {
+                        PointF rightEyePos = rightEye.getPosition();
+                        float rightEyeX = left + rightEyePos.x * scale;
+                        float rightEyeY = top + rightEyePos.y * scale;
+                        canvas.drawCircle(rightEyeX, rightEyeY, eyeRadius, paint);  // 눈의 크기만큼 원을 그립니다.
+                    }
                 }
             }
         }

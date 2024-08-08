@@ -1,9 +1,9 @@
-package com.example.photoblur;
+package org.techtown.new_camera;
 
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class SecondActivity extends AppCompatActivity {
+public class MainActivity4 extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
