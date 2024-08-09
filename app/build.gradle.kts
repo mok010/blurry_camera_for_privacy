@@ -37,6 +37,8 @@ dependencies {
     implementation ("androidx.viewpager2:viewpager2:1.0.0")
     implementation ("me.relex:circleindicator:2.1.6")
     implementation ("com.google.mlkit:face-detection:16.1.5")
+    implementation ("com.google.mlkit:pose-detection:18.0.0-beta5")
+    implementation ("com.google.mlkit:pose-detection-accurate:18.0.0-beta5")
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)
