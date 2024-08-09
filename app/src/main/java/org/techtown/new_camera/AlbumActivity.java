@@ -80,6 +80,7 @@ public class AlbumActivity extends AppCompatActivity {
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                frameLayout.removeAllViews();
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType("image/*");
                 startActivityForResult(intent, 1);
@@ -260,11 +261,11 @@ public class AlbumActivity extends AppCompatActivity {
             PointF rt = Objects.requireNonNull(rightThumb).getPosition();
 
 
-            canvas.drawText("left_wrist",left+lw.x*scale,top+lw.y*scale,paint);
-            canvas.drawText("left_wrist",left+lp.x*scale,top+lp.y*scale,paint);
-            canvas.drawText("left_wrist",left+li.x*scale,top+li.y*scale,paint);
-            canvas.drawText("left_wrist",left+lt.x*scale,top+lt.y*scale,paint);
 
+            canvas.drawText("left_wrist",left+lw.x*scale,top+lw.y*scale,paint);
+            canvas.drawText("left_pinky",left+lp.x*scale,top+lp.y*scale,paint);
+            canvas.drawText("left_index",left+li.x*scale,top+li.y*scale,paint);
+            canvas.drawText("left_thumb",left+lt.x*scale,top+lt.y*scale,paint);
 
             canvas.drawText("right_wrist",left+rw.x*scale,top+rw.y*scale,paint);
             canvas.drawText("right_pinky",left+rp.x*scale,top+rp.y*scale,paint);
