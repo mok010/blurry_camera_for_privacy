@@ -19,6 +19,7 @@ import com.google.mlkit.vision.pose.PoseDetection;
 import com.google.mlkit.vision.pose.PoseDetector;
 import com.google.mlkit.vision.pose.PoseLandmark;
 import com.google.mlkit.vision.pose.accurate.AccuratePoseDetectorOptions;
+import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -55,15 +56,15 @@ public class ImageProcessor {
         return future;
     }
 
-    private static final AccuratePoseDetectorOptions options =
-            new AccuratePoseDetectorOptions.Builder()
-                    .setDetectorMode(AccuratePoseDetectorOptions.SINGLE_IMAGE_MODE)
+    private static final PoseDetectorOptions options =
+            new PoseDetectorOptions.Builder()
+                    .setDetectorMode(PoseDetectorOptions.SINGLE_IMAGE_MODE)
                     .build();
 
     private static final PoseDetector poseDetector = PoseDetection.getClient(options);
 
-    public static CompletableFuture<Pose> processInputImage_pose(Bitmap bitmap) {
-        CompletableFuture<Pose> future_pose = new CompletableFuture<>();
+    public static CompletableFuture<Pose> processInputImagePose(Bitmap bitmap) {
+        CompletableFuture<Pose> futurePose = new CompletableFuture<>();
         InputImage image = InputImage.fromBitmap(bitmap,0);
 
         poseDetector.process(image)
@@ -71,16 +72,16 @@ public class ImageProcessor {
                         new OnSuccessListener<Pose>() {
                             @Override
                             public void onSuccess(Pose poses) {
-                                future_pose.complete(poses);
+                                futurePose.complete(poses);
                             }
                         })
                 .addOnFailureListener(
                         new OnFailureListener() {
                             @Override
-                            public void onFailure(@NonNull Exception e) {future_pose.completeExceptionally(e); }
+                            public void onFailure(@NonNull Exception e) {futurePose.completeExceptionally(e); }
                         });
 
-        return  future_pose;
+        return  futurePose;
     }
 
 

@@ -31,10 +31,13 @@ import androidx.core.view.WindowInsetsCompat;
 import com.google.mlkit.vision.common.InputImage;
 import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceLandmark;
+import com.google.mlkit.vision.pose.Pose;
+import com.google.mlkit.vision.pose.PoseLandmark;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
 public class AlbumActivity extends AppCompatActivity {
@@ -114,10 +117,11 @@ public class AlbumActivity extends AppCompatActivity {
                             try {
                                 InputImage inputImage = InputImage.fromBitmap(photoBitmap, 0);
                                 List<Face> faces = ImageProcessor.processInputImage(photoBitmap).get();
+                                Pose poses = ImageProcessor.processInputImagePose(photoBitmap).get();
                                 runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
-                                        CustomView customView = new CustomView(AlbumActivity.this, photoBitmap, faces, isIrisBlurringOn);
+                                        CustomView customView = new CustomView(AlbumActivity.this, photoBitmap, faces, poses, isIrisBlurringOn);
                                         frameLayout.addView(customView);  // CustomView 추가
                                     }
                                 });
@@ -173,11 +177,15 @@ public class AlbumActivity extends AppCompatActivity {
         private Paint paint;
         private boolean isIrisBlurringOn;
 
-        public CustomView(Context context, Bitmap bitmap, List<Face> faces, boolean isIrisBlurringOn) {
+        private Pose poses;
+
+        public CustomView(Context context, Bitmap bitmap, List<Face> faces,Pose poses ,boolean isIrisBlurringOn) {
             super(context);
             this.bitmap = bitmap;
             this.faces = faces;
             this.isIrisBlurringOn = isIrisBlurringOn;
+            this.poses = poses;
+
             this.paint = new Paint();
             paint.setColor(Color.BLACK);
             paint.setStyle(Paint.Style.FILL);
@@ -187,6 +195,7 @@ public class AlbumActivity extends AppCompatActivity {
         @Override
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
+
 
             // 화면 크기와 비트맵 크기를 구합니다.
             int canvasWidth = canvas.getWidth();
@@ -204,6 +213,16 @@ public class AlbumActivity extends AppCompatActivity {
             float top = (canvasHeight - scaledHeight) / 2;
 
             canvas.drawBitmap(bitmap, null, new Rect((int) left, (int) top, (int) (left + scaledWidth), (int) (top + scaledHeight)), null);
+
+            /*
+            // 비트맵과 같은 크기의 새로운 비트맵을 생성합니다.
+            Bitmap sameSizeBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
+
+            // 새로 생성한 비트맵으로 캔버스를 만듭니다.
+            canvas = new Canvas(sameSizeBitmap);
+            */
+            // 비트맵을 캔버스에 그립니다.
+            //canvas.drawBitmap(bitmap, 0, 0, null);
 
             // 얼굴 인식 결과를 그립니다.
             for (Face face : faces) {
@@ -229,6 +248,37 @@ public class AlbumActivity extends AppCompatActivity {
                     }
                 }
             }
+
+            //손 인식결과를 그립니다.
+            PoseLandmark leftWrist = poses.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+            PoseLandmark leftPinky = poses.getPoseLandmark(PoseLandmark.LEFT_PINKY);
+            PoseLandmark leftIndex = poses.getPoseLandmark(PoseLandmark.LEFT_INDEX);
+            PoseLandmark leftThumb = poses.getPoseLandmark(PoseLandmark.LEFT_THUMB);
+            PointF lw = Objects.requireNonNull(leftWrist).getPosition();
+            PointF lp = Objects.requireNonNull(leftPinky).getPosition();
+            PointF li = Objects.requireNonNull(leftIndex).getPosition();
+            PointF lt = Objects.requireNonNull(leftThumb).getPosition();
+            float[]  lh={lw.x,lw.y,lp.x,lp.y,li.x,li.y,lt.x,lt.y};
+
+            PoseLandmark rightWrist = poses.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
+            PoseLandmark rightPinky = poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY);
+            PoseLandmark rightIndex = poses.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
+            PoseLandmark rightThumb = poses.getPoseLandmark(PoseLandmark.RIGHT_THUMB);
+            PointF rw = Objects.requireNonNull(rightWrist).getPosition();
+            PointF rp = Objects.requireNonNull(rightPinky).getPosition();
+            PointF ri = Objects.requireNonNull(rightIndex).getPosition();
+            PointF rt = Objects.requireNonNull(rightThumb).getPosition();
+            float[] rh={rw.x,rw.y,rp.x,rp.y,ri.x,ri.y,rt.x,rt.y};
+
+            canvas.drawText("left_wrist",lw.x,lw.y,paint);
+            canvas.drawText("left_pinky",lp.x,lp.y,paint);
+            canvas.drawText("left_index",li.x,li.y,paint);
+            canvas.drawText("left_thumb",lt.x,lt.y,paint);
+
+            canvas.drawText("right_wrist",rw.x,rw.y,paint);
+            canvas.drawText("right_pinky",rp.x,rp.y,paint);
+            canvas.drawText("right_index",ri.x,ri.y,paint);
+            canvas.drawText("right_thumb",rt.x,rt.y,paint);
         }
     }
 }
