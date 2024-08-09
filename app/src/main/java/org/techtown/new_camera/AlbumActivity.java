@@ -214,15 +214,6 @@ public class AlbumActivity extends AppCompatActivity {
 
             canvas.drawBitmap(bitmap, null, new Rect((int) left, (int) top, (int) (left + scaledWidth), (int) (top + scaledHeight)), null);
 
-            /*
-            // 비트맵과 같은 크기의 새로운 비트맵을 생성합니다.
-            Bitmap sameSizeBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), bitmap.getConfig());
-
-            // 새로 생성한 비트맵으로 캔버스를 만듭니다.
-            canvas = new Canvas(sameSizeBitmap);
-            */
-            // 비트맵을 캔버스에 그립니다.
-            //canvas.drawBitmap(bitmap, 0, 0, null);
 
             // 얼굴 인식 결과를 그립니다.
             for (Face face : faces) {
@@ -258,7 +249,6 @@ public class AlbumActivity extends AppCompatActivity {
             PointF lp = Objects.requireNonNull(leftPinky).getPosition();
             PointF li = Objects.requireNonNull(leftIndex).getPosition();
             PointF lt = Objects.requireNonNull(leftThumb).getPosition();
-            float[]  lh={lw.x,lw.y,lp.x,lp.y,li.x,li.y,lt.x,lt.y};
 
             PoseLandmark rightWrist = poses.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
             PoseLandmark rightPinky = poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY);
@@ -268,17 +258,18 @@ public class AlbumActivity extends AppCompatActivity {
             PointF rp = Objects.requireNonNull(rightPinky).getPosition();
             PointF ri = Objects.requireNonNull(rightIndex).getPosition();
             PointF rt = Objects.requireNonNull(rightThumb).getPosition();
-            float[] rh={rw.x,rw.y,rp.x,rp.y,ri.x,ri.y,rt.x,rt.y};
 
-            canvas.drawText("left_wrist",lw.x,lw.y,paint);
-            canvas.drawText("left_pinky",lp.x,lp.y,paint);
-            canvas.drawText("left_index",li.x,li.y,paint);
-            canvas.drawText("left_thumb",lt.x,lt.y,paint);
 
-            canvas.drawText("right_wrist",rw.x,rw.y,paint);
-            canvas.drawText("right_pinky",rp.x,rp.y,paint);
-            canvas.drawText("right_index",ri.x,ri.y,paint);
-            canvas.drawText("right_thumb",rt.x,rt.y,paint);
+            canvas.drawText("left_wrist",left+lw.x*scale,top+lw.y*scale,paint);
+            canvas.drawText("left_wrist",left+lp.x*scale,top+lp.y*scale,paint);
+            canvas.drawText("left_wrist",left+li.x*scale,top+li.y*scale,paint);
+            canvas.drawText("left_wrist",left+lt.x*scale,top+lt.y*scale,paint);
+
+
+            canvas.drawText("right_wrist",left+rw.x*scale,top+rw.y*scale,paint);
+            canvas.drawText("right_pinky",left+rp.x*scale,top+rp.y*scale,paint);
+            canvas.drawText("right_index",left+ri.x*scale,top+ri.y*scale,paint);
+            canvas.drawText("right_thumb",left+rt.x*scale,top+rt.y*scale,paint);
         }
     }
 }
