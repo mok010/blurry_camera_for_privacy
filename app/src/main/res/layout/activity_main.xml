@@ -35,15 +35,16 @@
             android:background="@android:color/transparent" />
 
         <Button
-            android:id="@+id/btn_takepicture"
-            android:layout_height="match_parent"
-            android:padding="30dp"
+            android:id="@+id/btn_convert"
             android:layout_width="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1"
             android:layout_margin="20dp"
-            android:width="10dp"
-            android:height="100dp"
-            android:background="@drawable/btn_shape1" />
+            android:padding="30dp"
+            android:background="@drawable/btn_shape2"
+            android:text="변환 시작"
+            android:textColor="@android:color/white" />
+
 
 
         <ImageButton
@@ -55,7 +56,37 @@
             android:src="@drawable/rotate"
             android:scaleType="centerInside"
             android:background="@android:color/transparent" />
-    </LinearLayout>
+
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+    <!-- 사진 찍기 버튼 -->
+    <Button
+        android:id="@+id/btn_takepicture"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="20dp"
+        android:padding="30dp"
+        android:background="@drawable/btn_shape1"
+        android:text="사진 찍기"
+        android:textColor="@android:color/white" />
+
+    <!-- 변환 시작 버튼 -->
+    <Button
+        android:id="@+id/btn_convert"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_margin="20dp"
+        android:padding="30dp"
+        android:background="@drawable/btn_shape2"
+        android:text="변환 시작"
+        android:textColor="@android:color/white" />
 
 </LinearLayout>
 

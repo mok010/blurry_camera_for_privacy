@@ -131,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
         Button takePictureButton = findViewById(R.id.btn_takepicture);
         ImageButton rotateButton = findViewById(R.id.btn_rotate);
         ImageButton albumButton = findViewById(R.id.btn_album);
+        Button convertButton = findViewById(R.id.btn_convert); // 변환 시작 버튼
 
         //권한 확인 요청
         if (chkPermission()){
@@ -144,6 +145,19 @@ public class MainActivity extends AppCompatActivity {
                 takePicture(); // 사진 촬영 메소드 호출
             }
         });
+
+        // 변환 시작 버튼 클릭 리스너 추가
+        convertButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startIrisRecognition(); // 홍채 인식 변환 시작 메소드 호출
+                }
+            });
+
+        // 권한 확인 요청
+        if (chkPermission()) {
+            Toast.makeText(this, "위험 권한 승인함", Toast.LENGTH_SHORT).show();
+        }
 
         albumButton.setOnClickListener(new View.OnClickListener() {
             @Override
