@@ -43,6 +43,11 @@
         <activity
             android:name=".TransitionActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".IrisRecognitionActivity"
+            android:exported="true" />
+
         <activity
             android:name=".LoadingActivity"
             android:exported="true" >
