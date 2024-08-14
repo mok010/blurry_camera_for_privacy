@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">new_camera</string>
 
-        <string name="iris_image_desc">Iris Recognition Image</string>
+    <string name="iris_image_desc">Iris Recognition Image</string>
 </resources>
