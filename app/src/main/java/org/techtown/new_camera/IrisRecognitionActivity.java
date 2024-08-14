@@ -21,6 +21,7 @@ public class IrisRecognitionActivity extends AppCompatActivity {
 
         ImageView imageView = findViewById(R.id.iris_image);
 
+        // MainActivity로부터 이미지 경로를 가져옴
         Intent intent = getIntent();
         String imgPath = intent.getStringExtra("img");
 
@@ -30,17 +31,11 @@ public class IrisRecognitionActivity extends AppCompatActivity {
                 Bitmap myBitmap = BitmapFactory.decodeFile(imgFile.getAbsolutePath());
                 imageView.setImageBitmap(myBitmap);
 
-                // 홍채 인식 변환 기능 호출
-                startIrisRecognition(myBitmap);
-            } else {
-                Toast.makeText(this, "이미지 파일을 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
+                // 홍채 인식 처리 (여기서는 Toast 메시지로 대체)
+                Toast.makeText(this, "홍채 인식이 시작되었습니다!", Toast.LENGTH_SHORT).show();
+
+                // 홍채 인식 알고리즘 추가
             }
         }
-    }
-
-    private void startIrisRecognition(Bitmap bitmap) {
-        Toast.makeText(this, "홍채 인식 변환이 시작되었습니다.", Toast.LENGTH_SHORT).show();
-
-        // 여기에 홍채 인식 알고리즘 추가
     }
 }
