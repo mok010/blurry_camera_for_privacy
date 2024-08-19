@@ -119,13 +119,59 @@ public class AlbumActivity extends AppCompatActivity {
                                 InputImage inputImage = InputImage.fromBitmap(photoBitmap, 0);
                                 List<Face> faces = ImageProcessor.processInputImage(photoBitmap).get();
                                 Pose poses = ImageProcessor.processInputImagePose(photoBitmap).get();
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        CustomView customView = new CustomView(AlbumActivity.this, photoBitmap, faces, poses, isIrisBlurringOn);
-                                        frameLayout.addView(customView);  // CustomView 추가
+                                if (isIrisBlurringOn && faces.size() > 0) {
+                                    // 블러 처리
+                                    Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
+                                    for (Face face : faces) {
+                                        float eyeRadius = face.getBoundingBox().width() * 0.03f;
+
+                                        // 왼쪽 눈 블러 처리
+                                        FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
+                                        if (leftEye != null) {
+                                            PointF leftEyePos = leftEye.getPosition();
+                                            Rect leftEyeRect = new Rect(
+                                                    (int) (leftEyePos.x - eyeRadius),
+                                                    (int) (leftEyePos.y - eyeRadius),
+                                                    (int) (leftEyePos.x + eyeRadius),
+                                                    (int) (leftEyePos.y + eyeRadius)
+                                            );
+                                            blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, leftEyeRect);
+                                        }
+
+                                        // 오른쪽 눈 블러 처리
+                                        FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
+                                        if (rightEye != null) {
+                                            PointF rightEyePos = rightEye.getPosition();
+                                            Rect rightEyeRect = new Rect(
+                                                    (int) (rightEyePos.x - eyeRadius),
+                                                    (int) (rightEyePos.y - eyeRadius),
+                                                    (int) (rightEyePos.x + eyeRadius),
+                                                    (int) (rightEyePos.y + eyeRadius)
+                                            );
+                                            blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, rightEyeRect);
+                                        }
+
                                     }
-                                });
+                                    //수정 필요 포인트 시작점
+                                    //1. 일단 지문 on,off 탐지후 조건 문 시작
+                                    //2. 지문에 필요한 기능 수행 후 blurredBitmap에 블러된 이미지 재할당
+                                    //블러링은 blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, rightEyeRect);
+                                    //처럼 수행하면 되는데, 블러링 사각형의 4좌표를 담은 rect 개체와 blurredBitmap을 넘겨주기만 하면 돤다.
+                                    Bitmap finalBlurredBitmap = blurredBitmap;
+
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            imageView.setImageBitmap(finalBlurredBitmap);
+
+//                                            //CustomView customView = new CustomView(AlbumActivity.this, photoBitmap, faces, poses, isIrisBlurringOn);
+//                                            //frameLayout.addView(customView);  // CustomView 추가
+                                        }
+                                    });
+
+                                }
+
+
                             } catch (ExecutionException | InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -169,6 +215,105 @@ public class AlbumActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static class BitmapUtil {
+
+        public static class Size {
+            public int width;
+            public int height;
+
+            public Size(int w, int h) {
+                this.width = w;
+                this.height = h;
+            }
+        }
+
+        public static Bitmap blurRegion(Bitmap bitmap, Rect region) {
+            int left = Math.max(0, region.left);
+            int top = Math.max(0, region.top);
+            int right = Math.min(bitmap.getWidth(), region.right);
+            int bottom = Math.min(bitmap.getHeight(), region.bottom);
+
+            if (left >= right || top >= bottom) {
+                return bitmap;
+            }
+
+            Bitmap regionBitmap = Bitmap.createBitmap(bitmap, left, top, right - left, bottom - top);
+
+            Bitmap blurredRegion = blur(regionBitmap);
+
+            Bitmap mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+            Canvas canvas = new Canvas(mutableBitmap);
+
+            canvas.drawBitmap(blurredRegion, left, top, null);
+
+            return mutableBitmap;
+        }
+
+        public static Bitmap blur(Bitmap bitmap) {
+            int iterations = 1;
+            int radius = 8;
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+            int[] inPixels = new int[width * height];
+            int[] outPixels = new int[width * height];
+            Bitmap blured = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+            bitmap.getPixels(inPixels, 0, width, 0, 0, width, height);
+            for (int i = 0; i < iterations; i++) {
+                blur(inPixels, outPixels, width, height, radius);
+                blur(outPixels, inPixels, height, width, radius);
+            }
+            blured.setPixels(inPixels, 0, width, 0, 0, width, height);
+            return blured;
+        }
+
+        private static void blur(int[] in, int[] out, int width, int height, int radius) {
+            int widthMinus1 = width - 1;
+            int tableSize = 2 * radius + 1;
+            int[] divide = new int[256 * tableSize];
+
+            for (int index = 0; index < 256 * tableSize; index++) {
+                divide[index] = index / tableSize;
+            }
+
+            int inIndex = 0;
+
+            for (int y = 0; y < height; y++) {
+                int outIndex = y;
+                int ta = 0, tr = 0, tg = 0, tb = 0;
+
+                for (int i = -radius; i <= radius; i++) {
+                    int rgb = in[inIndex + clamp(i, 0, width - 1)];
+                    ta += (rgb >> 24) & 0xff;
+                    tr += (rgb >> 16) & 0xff;
+                    tg += (rgb >> 8) & 0xff;
+                    tb += rgb & 0xff;
+                }
+
+                for (int x = 0; x < width; x++) {
+                    out[outIndex] = (divide[ta] << 24) | (divide[tr] << 16) | (divide[tg] << 8) | divide[tb];
+
+                    int i1 = x + radius + 1;
+                    if (i1 > widthMinus1) i1 = widthMinus1;
+                    int i2 = x - radius;
+                    if (i2 < 0) i2 = 0;
+                    int rgb1 = in[inIndex + i1];
+                    int rgb2 = in[inIndex + i2];
+
+                    ta += ((rgb1 >> 24) & 0xff) - ((rgb2 >> 24) & 0xff);
+                    tr += ((rgb1 & 0xff0000) - (rgb2 & 0xff0000)) >> 16;
+                    tg += ((rgb1 & 0xff00) - (rgb2 & 0xff00)) >> 8;
+                    tb += (rgb1 & 0xff) - (rgb2 & 0xff);
+                    outIndex += height;
+                }
+                inIndex += width;
+            }
+        }
+
+        private static int clamp(int x, int a, int b) {
+            return (x < a) ? a : (x > b) ? b : x;
+        }
     }
 
     // 커스텀 뷰 클래스
@@ -217,29 +362,7 @@ public class AlbumActivity extends AppCompatActivity {
 
 
             // 얼굴 인식 결과를 그립니다.
-            for (Face face : faces) {
-                if (isIrisBlurringOn) {
-                    float eyeRadius = face.getBoundingBox().width() * 0.03f; // 얼굴 너비의 3%를 눈의 반지름으로 사용
 
-                    // 왼쪽 눈의 위치를 가져옵니다.
-                    FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
-                    if (leftEye != null) {
-                        PointF leftEyePos = leftEye.getPosition();
-                        float leftEyeX = left + leftEyePos.x * scale;
-                        float leftEyeY = top + leftEyePos.y * scale;
-                        canvas.drawCircle(leftEyeX, leftEyeY, eyeRadius, paint);  // 눈의 크기만큼 원을 그립니다.
-                    }
-
-                    // 오른쪽 눈의 위치를 가져옵니다.
-                    FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
-                    if (rightEye != null) {
-                        PointF rightEyePos = rightEye.getPosition();
-                        float rightEyeX = left + rightEyePos.x * scale;
-                        float rightEyeY = top + rightEyePos.y * scale;
-                        canvas.drawCircle(rightEyeX, rightEyeY, eyeRadius, paint);  // 눈의 크기만큼 원을 그립니다.
-                    }
-                }
-            }
 
             //손 인식결과를 그립니다.
             PoseLandmark leftWrist = poses.getPoseLandmark(PoseLandmark.LEFT_WRIST);
