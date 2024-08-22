@@ -125,17 +125,34 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // 대기 화면으로 전환하는 코드
+        Intent intent = new Intent(MainActivity.this, WaitingActivity.class);
+        startActivity(intent);
+
         textureView = findViewById(R.id.textureView);
         // TextureView에 리스너 설정
         textureView.setSurfaceTextureListener(textureListener);
         Button takePictureButton = findViewById(R.id.btn_takepicture);
         ImageButton rotateButton = findViewById(R.id.btn_rotate);
         ImageButton albumButton = findViewById(R.id.btn_album);
+        Button yourButton = findViewById(R.id.your_button_id);
 
         //권한 확인 요청
         if (chkPermission()){
             Toast.makeText(this, "위험 권한 승인함", Toast.LENGTH_SHORT).show();
         }
+
+        yourButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 대기 화면으로 전환하는 Intent 생성
+                Intent intent = new Intent(MainActivity.this, WaitingActivity.class);
+                startActivity(intent);
+                
+                // 현재 액티비티를 종료하려면 finish() 호출 가능
+            }
+        });
 
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
