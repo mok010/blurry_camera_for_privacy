@@ -30,7 +30,7 @@ public class FingerMainActivity extends AppCompatActivity {
             int currentItem = mPager.getCurrentItem();
             int nextItem = currentItem + 1;
             mPager.setCurrentItem(nextItem);
-            slideHandler.postDelayed(this, 3000); // Schedule the next slide after 3 seconds
+            slideHandler.postDelayed(this, 3000); // 3초마다 페이지 전환
         }
     };
 
@@ -42,21 +42,20 @@ public class FingerMainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_onoff);
 
-        // ViewPager2
+        // ViewPager2 초기화
         mPager = findViewById(R.id.viewpager);
-        // Adapter
         pagerAdapter = new MyAdapter(this, num_page);
         mPager.setAdapter(pagerAdapter);
-        // Indicator
+
+        // Indicator 설정
         mIndicator = findViewById(R.id.indicator);
         mIndicator.setViewPager(mPager);
         mIndicator.createIndicators(num_page, 0);
-        // ViewPager Setting
         mPager.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
 
-        // Initial page setup
-        mPager.setCurrentItem(1000); // Start point
-        mPager.setOffscreenPageLimit(4); // Max image count
+        // 초기 페이지 설정
+        mPager.setCurrentItem(1000); // 시작점 설정
+        mPager.setOffscreenPageLimit(4); // 최대 페이지 수
 
         mPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
@@ -74,10 +73,10 @@ public class FingerMainActivity extends AppCompatActivity {
             }
         });
 
-        // Start the auto-slide
+        // 자동 슬라이드 시작
         slideHandler.postDelayed(slideRunnable, 3000);
 
-        // Setup buttons
+        // 버튼 초기화
         Button buttonIris = findViewById(R.id.button4);
         Button buttonFingerprint = findViewById(R.id.button3);
         Button buttonCamera = findViewById(R.id.button2);  // "카메라" 버튼
@@ -113,15 +112,17 @@ public class FingerMainActivity extends AppCompatActivity {
             }
         });
 
+        // "카메라" 버튼 클릭 시 "앨범" 버튼과 동일하게 AlbumActivity로 이동하도록 수정
         buttonCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(FingerMainActivity.this, TransitionActivity.class);
-                intent.putExtra("next_activity", "MainActivity");
+                intent.putExtra("next_activity", "AlbumActivity");
                 startActivity(intent);
             }
         });
 
+        // "앨범" 버튼 클릭 시 AlbumActivity로 이동
         buttonAlbum.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -135,7 +136,7 @@ public class FingerMainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        // Remove callbacks to avoid memory leaks
+        // 메모리 누수 방지를 위해 슬라이드 핸들러 콜백 제거
         slideHandler.removeCallbacks(slideRunnable);
     }
 }
