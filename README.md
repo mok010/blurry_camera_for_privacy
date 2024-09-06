@@ -5,6 +5,9 @@
 **2024년 졸업 프로젝트**
 
 사진에 노출되는 개인정보를 안전하게 보호하기 위해 홍채 및 지문을 자동 블러링 처리 해주는 카메라 어플리케이션.
+
+
+
 A camera application that automatically blurs iris and fingerprints to safely protect personal information exposed in photos.
 
 # Role
