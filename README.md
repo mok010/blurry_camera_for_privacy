@@ -5,6 +5,7 @@
 **2024년 졸업 프로젝트**
 
 사진에 노출되는 개인정보를 안전하게 보호하기 위해 홍채 및 지문을 자동 블러링 처리 해주는 카메라 어플리케이션.
+A camera application that automatically blurs iris and fingerprints to safely protect personal information exposed in photos.
 
 # Role
 
@@ -28,6 +29,16 @@
 
 - **앨범** : 앨범에서 불러온 이미지를 블러링 기능 자동 수행.
 
+**1. Main function**
+
+- **Iris blurring**: Identify the iris in the image and convert it to blurry. (ON/OFF)
+
+- **Fingerprint blurring**: Fingerprints are identified in the image and converted to blurry. (ON/OFF)
+
+- **Photo taking**: Take photos with the camera and automatically perform blurring functions.
+
+- **Album**: Automatically performs the blurring function on images loaded from the album.
+
 -------------------
 
 **2.개발 도구**
@@ -35,5 +46,11 @@
 - **Android Studio** : 전체적인 코드 구현
 
 - **Kakao Oven** : 구체적인 UI 스케치
+
+**2.Development Tools**
+
+- **Android Studio**: Overall code implementation
+
+- **Kakao Oven**: Specific UI sketch
 
 -------------------
