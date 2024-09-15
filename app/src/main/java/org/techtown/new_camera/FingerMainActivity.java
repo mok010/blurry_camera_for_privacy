@@ -112,12 +112,13 @@ public class FingerMainActivity extends AppCompatActivity {
             }
         });
 
-        // "카메라" 버튼 클릭 시 "앨범" 버튼과 동일하게 AlbumActivity로 이동하도록 수정
+        // "카메라" 버튼 클릭 시 카메라 화면으로 이동
         buttonCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(FingerMainActivity.this, TransitionActivity.class);
-                intent.putExtra("next_activity", "AlbumActivity");
+                // MainActivity로 이동하면서 블러링 설정 상태 전달
+                Intent intent = new Intent(FingerMainActivity.this, MainActivity.class);
+                intent.putExtra("is_iris_blurring_on", isIrisBlurringOn); // 홍채 블러링 설정 전달
                 startActivity(intent);
             }
         });
