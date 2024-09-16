@@ -168,19 +168,19 @@ public class AlbumActivity extends AppCompatActivity {
                                     // 왼손의 각 손가락 끝 좌표 (엄지, 검지, 중지, 약지, 새끼)
                                     PoseLandmark[] leftFingers = {
                                             poses.getPoseLandmark(PoseLandmark.LEFT_THUMB),
-                                            poses.getPoseLandmark(PoseLandmark.LEFT_INDEX),
-//                                                poses.getPoseLandmark(PoseLandmark.LEFT_MIDDLE_FINGER_TIP),  // 중지 끝 좌표
-//                                                poses.getPoseLandmark(PoseLandmark.LEFT_RING_FINGER_TIP),    // 약지 끝 좌표
-                                            poses.getPoseLandmark(PoseLandmark.LEFT_PINKY)
+//                                            poses.getPoseLandmark(PoseLandmark.LEFT_INDEX),
+//                                            poses.getPoseLandmark(PoseLandmark.LEFT_MIDDLE_FINGER_TIP),  // 중지 끝 좌표
+//                                            poses.getPoseLandmark(PoseLandmark.LEFT_RING_FINGER_TIP),    // 약지 끝 좌표
+//                                            poses.getPoseLandmark(PoseLandmark.LEFT_PINKY)
                                     };
 
                                     // 오른손의 각 손가락 끝 좌표 (엄지, 검지, 중지, 약지, 새끼)
                                     PoseLandmark[] rightFingers = {
                                             poses.getPoseLandmark(PoseLandmark.RIGHT_THUMB),
-                                            poses.getPoseLandmark(PoseLandmark.RIGHT_INDEX),
-//                                                poses.getPoseLandmark(PoseLandmark.RIGHT_MIDDLE_FINGER_TIP), // 중지 끝 좌표
-//                                                poses.getPoseLandmark(PoseLandmark.RIGHT_RING_FINGER_TIP),   // 약지 끝 좌표
-                                            poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY)
+//                                          poses.getPoseLandmark(PoseLandmark.RIGHT_INDEX),
+//                                          poses.getPoseLandmark(PoseLandmark.RIGHT_MIDDLE_FINGER_TIP), // 중지 끝 좌표
+//                                          poses.getPoseLandmark(PoseLandmark.RIGHT_RING_FINGER_TIP),   // 약지 끝 좌표
+//                                          poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY)
                                     };
 
                                     // 각 손가락에 대해 블러링 적용
@@ -386,8 +386,8 @@ public class AlbumActivity extends AppCompatActivity {
             paint.setStyle(Paint.Style.FILL);
             paint.setAlpha(128);  // 50% 불투명도 설정
         }
-
-        @Override
+//
+//        @Override
 //        protected void onDraw(Canvas canvas) {
 //            super.onDraw(canvas);
 //
