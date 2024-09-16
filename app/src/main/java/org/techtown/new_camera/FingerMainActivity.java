@@ -119,6 +119,7 @@ public class FingerMainActivity extends AppCompatActivity {
                 // MainActivity로 이동하면서 블러링 설정 상태 전달
                 Intent intent = new Intent(FingerMainActivity.this, MainActivity.class);
                 intent.putExtra("is_iris_blurring_on", isIrisBlurringOn); // 홍채 블러링 설정 전달
+                intent.putExtra("is_fingerprint_blurring_on", isFingerprintBlurringOn); // 홍채 블러링 설정 전달
                 startActivity(intent);
             }
         });

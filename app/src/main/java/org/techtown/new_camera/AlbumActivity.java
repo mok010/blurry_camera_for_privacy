@@ -44,7 +44,9 @@ public class AlbumActivity extends AppCompatActivity {
 
     private static final String PREFS_NAME = "BlurPrefs";
     private static final String KEY_IRIS_BLURRING = "iris_blurring";
+    private static final String KEY_FINGERPRINT_BLURRING = "fingerprint_blurring";
     private boolean isIrisBlurringOn;
+    private boolean isFingerprintBlurringOn;
 
     ImageView imageView;
     FrameLayout frameLayout;  // 커스텀 뷰를 추가할 레이아웃
@@ -65,6 +67,7 @@ public class AlbumActivity extends AppCompatActivity {
         // SharedPreferences 초기화
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         isIrisBlurringOn = prefs.getBoolean(KEY_IRIS_BLURRING, true);
+        isFingerprintBlurringOn = prefs.getBoolean(KEY_FINGERPRINT_BLURRING, true);
 
         // 이전 화면으로 돌아가는 버튼
         Button button = findViewById(R.id.button);
@@ -119,9 +122,10 @@ public class AlbumActivity extends AppCompatActivity {
                                 InputImage inputImage = InputImage.fromBitmap(photoBitmap, 0);
                                 List<Face> faces = ImageProcessor.processInputImage(photoBitmap).get();
                                 Pose poses = ImageProcessor.processInputImagePose(photoBitmap).get();
+                                Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
                                 if (isIrisBlurringOn && faces.size() > 0) {
                                     // 블러 처리
-                                    Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
+
                                     for (Face face : faces) {
                                         float eyeRadius = face.getBoundingBox().width() * 0.03f;
 
@@ -157,20 +161,44 @@ public class AlbumActivity extends AppCompatActivity {
                                     //2. 지문에 필요한 기능 수행 후 blurredBitmap에 블러된 이미지 재할당
                                     //블러링은 blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, rightEyeRect);
                                     //처럼 수행하면 되는데, 블러링 사각형의 4좌표를 담은 rect 개체와 blurredBitmap을 넘겨주기만 하면 돤다.
-                                    Bitmap finalBlurredBitmap = blurredBitmap;
-
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            imageView.setImageBitmap(finalBlurredBitmap);
-
-//                                            //CustomView customView = new CustomView(AlbumActivity.this, photoBitmap, faces, poses, isIrisBlurringOn);
-//                                            //frameLayout.addView(customView);  // CustomView 추가
-                                        }
-                                    });
 
                                 }
+                                // 눈동자 블러링이 완료된 후
+                                if (isFingerprintBlurringOn) {
+                                    // 왼손의 각 손가락 끝 좌표 (엄지, 검지, 중지, 약지, 새끼)
+                                    PoseLandmark[] leftFingers = {
+                                            poses.getPoseLandmark(PoseLandmark.LEFT_THUMB),
+                                            poses.getPoseLandmark(PoseLandmark.LEFT_INDEX),
+//                                                poses.getPoseLandmark(PoseLandmark.LEFT_MIDDLE_FINGER_TIP),  // 중지 끝 좌표
+//                                                poses.getPoseLandmark(PoseLandmark.LEFT_RING_FINGER_TIP),    // 약지 끝 좌표
+                                            poses.getPoseLandmark(PoseLandmark.LEFT_PINKY)
+                                    };
 
+                                    // 오른손의 각 손가락 끝 좌표 (엄지, 검지, 중지, 약지, 새끼)
+                                    PoseLandmark[] rightFingers = {
+                                            poses.getPoseLandmark(PoseLandmark.RIGHT_THUMB),
+                                            poses.getPoseLandmark(PoseLandmark.RIGHT_INDEX),
+//                                                poses.getPoseLandmark(PoseLandmark.RIGHT_MIDDLE_FINGER_TIP), // 중지 끝 좌표
+//                                                poses.getPoseLandmark(PoseLandmark.RIGHT_RING_FINGER_TIP),   // 약지 끝 좌표
+                                            poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY)
+                                    };
+
+                                    // 각 손가락에 대해 블러링 적용
+                                    blurredBitmap = applyBlurToFingers(blurredBitmap, leftFingers);
+                                    blurredBitmap = applyBlurToFingers(blurredBitmap, rightFingers);
+                                }
+
+
+                                // 최종 블러 처리된 이미지를 UI에 적용
+                                Bitmap finalBlurredBitmap = blurredBitmap;
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        imageView.setImageBitmap(finalBlurredBitmap);
+                                    }
+                                });
+
+//                                    Bitmap finalBlurredBitmap = blurredBitmap;
 
                             } catch (ExecutionException | InterruptedException e) {
                                 e.printStackTrace();
@@ -217,6 +245,25 @@ public class AlbumActivity extends AppCompatActivity {
         return null;
     }
 
+    private Bitmap applyBlurToFingers(Bitmap bitmap, PoseLandmark[] fingers) {
+        for (PoseLandmark finger : fingers) {
+            if (finger != null) {
+                PointF fingerPos = finger.getPosition();
+
+                // 지문 영역에 맞는 정사각형 좌표 계산
+                float blurRadius = 30;  // 블러링할 정사각형의 반지름 (필요에 따라 조정)
+                int leftX = (int) (fingerPos.x - blurRadius);  // 왼쪽 위 X 좌표
+                int topY = (int) (fingerPos.y - blurRadius);   // 왼쪽 위 Y 좌표
+                int rightX = (int) (fingerPos.x + blurRadius); // 오른쪽 아래 X 좌표
+                int bottomY = (int) (fingerPos.y + blurRadius); // 오른쪽 아래 Y 좌표
+
+                // 블러링 적용 (정사각형의 두 좌표 전달)
+                bitmap = AlbumActivity.BitmapUtil.blurRegion(bitmap, new Rect(leftX, topY, rightX, bottomY));
+            }
+        }
+        return bitmap;
+    }
+
     public static class BitmapUtil {
 
         public static class Size {
@@ -228,6 +275,8 @@ public class AlbumActivity extends AppCompatActivity {
                 this.height = h;
             }
         }
+
+
 
         public static Bitmap blurRegion(Bitmap bitmap, Rect region) {
             int left = Math.max(0, region.left);
@@ -339,70 +388,70 @@ public class AlbumActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onDraw(Canvas canvas) {
-            super.onDraw(canvas);
-
-
-            // 화면 크기와 비트맵 크기를 구합니다.
-            int canvasWidth = canvas.getWidth();
-            int canvasHeight = canvas.getHeight();
-            int bitmapWidth = bitmap.getWidth();
-            int bitmapHeight = bitmap.getHeight();
-
-            // 스케일을 계산합니다.
-            float scale = Math.min((float) canvasWidth / bitmapWidth, (float) canvasHeight / bitmapHeight);
-
-            // 비트맵을 스케일과 위치를 적용하여 그립니다.
-            float scaledWidth = scale * bitmapWidth;
-            float scaledHeight = scale * bitmapHeight;
-            float left = (canvasWidth - scaledWidth) / 2;
-            float top = (canvasHeight - scaledHeight) / 2;
-
-            canvas.drawBitmap(bitmap, null, new Rect((int) left, (int) top, (int) (left + scaledWidth), (int) (top + scaledHeight)), null);
-
-
-            // 얼굴 인식 결과를 그립니다.
-
-
-            //손 인식결과를 그립니다.
-            PoseLandmark leftWrist = poses.getPoseLandmark(PoseLandmark.LEFT_WRIST);
-            PoseLandmark leftPinky = poses.getPoseLandmark(PoseLandmark.LEFT_PINKY);
-            PoseLandmark leftIndex = poses.getPoseLandmark(PoseLandmark.LEFT_INDEX);
-            PoseLandmark leftThumb = poses.getPoseLandmark(PoseLandmark.LEFT_THUMB);
-            PointF lw = Objects.requireNonNull(leftWrist).getPosition();
-            PointF lp = Objects.requireNonNull(leftPinky).getPosition();
-            PointF li = Objects.requireNonNull(leftIndex).getPosition();
-            PointF lt = Objects.requireNonNull(leftThumb).getPosition();
-
-            PoseLandmark rightWrist = poses.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
-            PoseLandmark rightPinky = poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY);
-            PoseLandmark rightIndex = poses.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
-            PoseLandmark rightThumb = poses.getPoseLandmark(PoseLandmark.RIGHT_THUMB);
-            PointF rw = Objects.requireNonNull(rightWrist).getPosition();
-            PointF rp = Objects.requireNonNull(rightPinky).getPosition();
-            PointF ri = Objects.requireNonNull(rightIndex).getPosition();
-            PointF rt = Objects.requireNonNull(rightThumb).getPosition();
-
-
-
-            canvas.drawText("left_wrist",left+lw.x*scale,top+lw.y*scale,paint);
-            canvas.drawText("left_pinky",left+lp.x*scale,top+lp.y*scale,paint);
-            canvas.drawText("left_index",left+li.x*scale,top+li.y*scale,paint);
-            canvas.drawText("left_thumb",left+lt.x*scale,top+lt.y*scale,paint);
-
-            canvas.drawText("right_wrist",left+rw.x*scale,top+rw.y*scale,paint);
-            canvas.drawText("right_pinky",left+rp.x*scale,top+rp.y*scale,paint);
-            canvas.drawText("right_index",left+ri.x*scale,top+ri.y*scale,paint);
-            canvas.drawText("right_thumb",left+rt.x*scale,top+rt.y*scale,paint);
-
-
-            float leftRadius= (float) Math.sqrt(Math.pow((li.x-lw.x),2)+Math.pow((li.y-lw.y),2 ));
-            leftRadius=leftRadius*scale;
-            float rightRadius= (float) Math.sqrt(Math.pow((ri.x-rw.x),2)+Math.pow((ri.y-rw.y),2 ));
-            rightRadius=rightRadius*scale;
-
-            canvas.drawCircle(left+li.x*scale,top+li.y*scale,leftRadius,paint);
-            canvas.drawCircle(left+ri.x*scale,top+ri.y*scale,rightRadius,paint);
-        }
+//        protected void onDraw(Canvas canvas) {
+//            super.onDraw(canvas);
+//
+//
+//            // 화면 크기와 비트맵 크기를 구합니다.
+//            int canvasWidth = canvas.getWidth();
+//            int canvasHeight = canvas.getHeight();
+//            int bitmapWidth = bitmap.getWidth();
+//            int bitmapHeight = bitmap.getHeight();
+//
+//            // 스케일을 계산합니다.
+//            float scale = Math.min((float) canvasWidth / bitmapWidth, (float) canvasHeight / bitmapHeight);
+//
+//            // 비트맵을 스케일과 위치를 적용하여 그립니다.
+//            float scaledWidth = scale * bitmapWidth;
+//            float scaledHeight = scale * bitmapHeight;
+//            float left = (canvasWidth - scaledWidth) / 2;
+//            float top = (canvasHeight - scaledHeight) / 2;
+//
+//            canvas.drawBitmap(bitmap, null, new Rect((int) left, (int) top, (int) (left + scaledWidth), (int) (top + scaledHeight)), null);
+//
+//
+//            // 얼굴 인식 결과를 그립니다.
+//
+//
+//            //손 인식결과를 그립니다.
+//            PoseLandmark leftWrist = poses.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+//            PoseLandmark leftPinky = poses.getPoseLandmark(PoseLandmark.LEFT_PINKY);
+//            PoseLandmark leftIndex = poses.getPoseLandmark(PoseLandmark.LEFT_INDEX);
+//            PoseLandmark leftThumb = poses.getPoseLandmark(PoseLandmark.LEFT_THUMB);
+//            PointF lw = Objects.requireNonNull(leftWrist).getPosition();
+//            PointF lp = Objects.requireNonNull(leftPinky).getPosition();
+//            PointF li = Objects.requireNonNull(leftIndex).getPosition();
+//            PointF lt = Objects.requireNonNull(leftThumb).getPosition();
+//
+//            PoseLandmark rightWrist = poses.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
+//            PoseLandmark rightPinky = poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY);
+//            PoseLandmark rightIndex = poses.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
+//            PoseLandmark rightThumb = poses.getPoseLandmark(PoseLandmark.RIGHT_THUMB);
+//            PointF rw = Objects.requireNonNull(rightWrist).getPosition();
+//            PointF rp = Objects.requireNonNull(rightPinky).getPosition();
+//            PointF ri = Objects.requireNonNull(rightIndex).getPosition();
+//            PointF rt = Objects.requireNonNull(rightThumb).getPosition();
+//
+//
+//
+//            canvas.drawText("left_wrist",left+lw.x*scale,top+lw.y*scale,paint);
+//            canvas.drawText("left_pinky",left+lp.x*scale,top+lp.y*scale,paint);
+//            canvas.drawText("left_index",left+li.x*scale,top+li.y*scale,paint);
+//            canvas.drawText("left_thumb",left+lt.x*scale,top+lt.y*scale,paint);
+//
+//            canvas.drawText("right_wrist",left+rw.x*scale,top+rw.y*scale,paint);
+//            canvas.drawText("right_pinky",left+rp.x*scale,top+rp.y*scale,paint);
+//            canvas.drawText("right_index",left+ri.x*scale,top+ri.y*scale,paint);
+//            canvas.drawText("right_thumb",left+rt.x*scale,top+rt.y*scale,paint);
+//
+//
+//            float leftRadius= (float) Math.sqrt(Math.pow((li.x-lw.x),2)+Math.pow((li.y-lw.y),2 ));
+//            leftRadius=leftRadius*scale;
+//            float rightRadius= (float) Math.sqrt(Math.pow((ri.x-rw.x),2)+Math.pow((ri.y-rw.y),2 ));
+//            rightRadius=rightRadius*scale;
+//
+//            canvas.drawCircle(left+li.x*scale,top+li.y*scale,leftRadius,paint);
+//            canvas.drawCircle(left+ri.x*scale,top+ri.y*scale,rightRadius,paint);
+//        }
     }
 }
