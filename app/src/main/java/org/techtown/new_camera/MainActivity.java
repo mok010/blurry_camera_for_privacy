@@ -1,6 +1,7 @@
 package org.techtown.new_camera;
 
 import android.Manifest;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,6 +24,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
@@ -310,11 +312,37 @@ public class MainActivity extends AppCompatActivity {
 
     // 사진을 저장하고 다음 액티비티로 넘기는 메소드(2024 /09/15 수정)
     private void saveImageAndSendToNextActivity(Bitmap bitmap, String path) {
-        File file = new File(path);
-        try (OutputStream out = new FileOutputStream(file)) {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-        } catch (IOException e) {
-            e.printStackTrace();
+        // Android 10 이상에서 MediaStore 사용
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
+            values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+            values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES);
+
+            Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+            try (OutputStream out = getContentResolver().openOutputStream(uri)) {
+                if (out != null) {
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                    Toast.makeText(this, "사진이 갤러리에 저장되었습니다.", Toast.LENGTH_SHORT).show();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+            // 기존 Android 10 이하의 방식
+            File file = new File(path);
+            try (OutputStream out = new FileOutputStream(file)) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            // 사진을 MediaStore에 추가하여 갤러리에 반영되도록 함
+            MediaScannerConnection.scanFile(this, new String[]{file.getAbsolutePath()}, null, (path1, uri) -> {
+                Toast.makeText(this, "사진이 갤러리에 저장되었습니다.", Toast.LENGTH_SHORT).show();
+            });
         }
 
         // 사진 촬영 후 MainActivity2로 이동, img 경로 전달
@@ -368,4 +396,3 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 }
-
