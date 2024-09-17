@@ -39,6 +39,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class AlbumActivity extends AppCompatActivity {
 
@@ -96,6 +98,8 @@ public class AlbumActivity extends AppCompatActivity {
 
         // 블러 처리를 시작하는 버튼
         Button button3 = findViewById(R.id.button3);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         button3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -107,110 +111,149 @@ public class AlbumActivity extends AppCompatActivity {
                     dialog.show();
 
                     // 변환 과정 시 딜레이 추가
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            // ProgressDialog 없애기
-                            dialog.dismiss();
-                            Toast.makeText(AlbumActivity.this, "변환이 완료되었습니다:).", Toast.LENGTH_SHORT).show();
-                        }
-                    }, 5000);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                InputImage inputImage = InputImage.fromBitmap(photoBitmap, 0);
-                                List<Face> faces = ImageProcessor.processInputImage(photoBitmap).get();
-                                Pose poses = ImageProcessor.processInputImagePose(photoBitmap).get();
-                                Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
-                                if (isIrisBlurringOn && faces.size() > 0) {
-                                    // 블러 처리
+                    executor.execute(() -> {
+                        try {
+                            InputImage inputImage = InputImage.fromBitmap(photoBitmap, 0);
+                            List<Face> faces = ImageProcessor.processInputImage(photoBitmap).get();
+                            Pose poses = ImageProcessor.processInputImagePose(photoBitmap).get();
+                            Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
 
-                                    for (Face face : faces) {
-                                        float eyeRadius = face.getBoundingBox().width() * 0.03f;
-
-                                        // 왼쪽 눈 블러 처리
-                                        FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
-                                        if (leftEye != null) {
-                                            PointF leftEyePos = leftEye.getPosition();
-                                            Rect leftEyeRect = new Rect(
-                                                    (int) (leftEyePos.x - eyeRadius),
-                                                    (int) (leftEyePos.y - eyeRadius),
-                                                    (int) (leftEyePos.x + eyeRadius),
-                                                    (int) (leftEyePos.y + eyeRadius)
-                                            );
-                                            blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, leftEyeRect);
-                                        }
-
-                                        // 오른쪽 눈 블러 처리
-                                        FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
-                                        if (rightEye != null) {
-                                            PointF rightEyePos = rightEye.getPosition();
-                                            Rect rightEyeRect = new Rect(
-                                                    (int) (rightEyePos.x - eyeRadius),
-                                                    (int) (rightEyePos.y - eyeRadius),
-                                                    (int) (rightEyePos.x + eyeRadius),
-                                                    (int) (rightEyePos.y + eyeRadius)
-                                            );
-                                            blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, rightEyeRect);
-                                        }
-
+                            if (isIrisBlurringOn && faces.size() > 0) {
+                                // 얼굴 블러 처리
+                                for (Face face : faces) {
+                                    // 눈 블러 처리
+                                    float eyeRadius = face.getBoundingBox().width() * 0.03f;
+                                    FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
+                                    if (leftEye != null) {
+                                        PointF leftEyePos = leftEye.getPosition();
+                                        Rect leftEyeRect = new Rect(
+                                                (int) (leftEyePos.x - eyeRadius),
+                                                (int) (leftEyePos.y - eyeRadius),
+                                                (int) (leftEyePos.x + eyeRadius),
+                                                (int) (leftEyePos.y + eyeRadius)
+                                        );
+                                        blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, leftEyeRect);
                                     }
-                                    //수정 필요 포인트 시작점
-                                    //1. 일단 지문 on,off 탐지후 조건 문 시작
-                                    //2. 지문에 필요한 기능 수행 후 blurredBitmap에 블러된 이미지 재할당
-                                    //블러링은 blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, rightEyeRect);
-                                    //처럼 수행하면 되는데, 블러링 사각형의 4좌표를 담은 rect 개체와 blurredBitmap을 넘겨주기만 하면 돤다.
 
-                                }
-                                // 눈동자 블러링이 완료된 후
-                                if (isFingerprintBlurringOn) {
-                                    // 왼손의 각 손가락 끝 좌표 (엄지, 검지, 중지, 약지, 새끼)
-                                    PoseLandmark[] leftFingers = {
-                                            poses.getPoseLandmark(PoseLandmark.LEFT_THUMB),
-//                                            poses.getPoseLandmark(PoseLandmark.LEFT_INDEX),
-//                                            poses.getPoseLandmark(PoseLandmark.LEFT_MIDDLE_FINGER_TIP),  // 중지 끝 좌표
-//                                            poses.getPoseLandmark(PoseLandmark.LEFT_RING_FINGER_TIP),    // 약지 끝 좌표
-//                                            poses.getPoseLandmark(PoseLandmark.LEFT_PINKY)
-                                    };
-
-                                    // 오른손의 각 손가락 끝 좌표 (엄지, 검지, 중지, 약지, 새끼)
-                                    PoseLandmark[] rightFingers = {
-                                            poses.getPoseLandmark(PoseLandmark.RIGHT_THUMB),
-//                                          poses.getPoseLandmark(PoseLandmark.RIGHT_INDEX),
-//                                          poses.getPoseLandmark(PoseLandmark.RIGHT_MIDDLE_FINGER_TIP), // 중지 끝 좌표
-//                                          poses.getPoseLandmark(PoseLandmark.RIGHT_RING_FINGER_TIP),   // 약지 끝 좌표
-//                                          poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY)
-                                    };
-
-                                    // 각 손가락에 대해 블러링 적용
-                                    blurredBitmap = applyBlurToFingers(blurredBitmap, leftFingers);
-                                    blurredBitmap = applyBlurToFingers(blurredBitmap, rightFingers);
-                                }
-
-
-                                // 최종 블러 처리된 이미지를 UI에 적용
-                                Bitmap finalBlurredBitmap = blurredBitmap;
-                                runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        imageView.setImageBitmap(finalBlurredBitmap);
+                                    // 오른쪽 눈도 동일한 방식으로 처리
+                                    FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
+                                    if (rightEye != null) {
+                                        PointF rightEyePos = rightEye.getPosition();
+                                        Rect rightEyeRect = new Rect(
+                                                (int) (rightEyePos.x - eyeRadius),
+                                                (int) (rightEyePos.y - eyeRadius),
+                                                (int) (rightEyePos.x + eyeRadius),
+                                                (int) (rightEyePos.y + eyeRadius)
+                                        );
+                                        blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, rightEyeRect);
                                     }
-                                });
-
-//                                    Bitmap finalBlurredBitmap = blurredBitmap;
-
-                            } catch (ExecutionException | InterruptedException e) {
-                                e.printStackTrace();
+                                }
                             }
+
+                            // 손가락 블러 처리
+                            if (isFingerprintBlurringOn) {
+                                PoseLandmark leftIndex = poses.getPoseLandmark(PoseLandmark.LEFT_INDEX);
+                                PoseLandmark leftPinky = poses.getPoseLandmark(PoseLandmark.LEFT_PINKY);
+                                PoseLandmark leftWrist = poses.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+
+
+                                if (leftIndex != null && leftPinky != null && leftWrist != null) {
+                                    // 검지, 새끼, 손목 좌표 추출
+                                    PointF indexPos = leftIndex.getPosition();
+                                    PointF pinkyPos = leftPinky.getPosition();
+                                    PointF wristPos = leftWrist.getPosition();
+
+                                    // 손목을 기준으로 반지름을 계산 (검지와 손목, 새끼와 손목의 거리)
+                                    float indexRadius = (float) Math.sqrt(Math.pow(indexPos.x - wristPos.x, 2) + Math.pow(indexPos.y - wristPos.y, 2));
+                                    float pinkyRadius = (float) Math.sqrt(Math.pow(pinkyPos.x - wristPos.x, 2) + Math.pow(pinkyPos.y - wristPos.y, 2));
+
+                                    // 두 영역 생성 (손목에서 검지, 새끼 거리만큼의 원)
+                                    Rect indexRect = new Rect(
+                                            (int) (indexPos.x - indexRadius),
+                                            (int) (indexPos.y - indexRadius),
+                                            (int) (indexPos.x + indexRadius),
+                                            (int) (indexPos.y + indexRadius)
+                                    );
+
+                                    Rect pinkyRect = new Rect(
+                                            (int) (pinkyPos.x - pinkyRadius),
+                                            (int) (pinkyPos.y - pinkyRadius),
+                                            (int) (pinkyPos.x + pinkyRadius),
+                                            (int) (pinkyPos.y + pinkyRadius)
+                                    );
+
+                                    // 손목 좌표의 색상 추출
+                                    int wristColor = photoBitmap.getPixel((int) wristPos.x, (int) wristPos.y);
+
+                                    // 살색 판단 기준을 설정 (예: 손목 색상에서 유사한 범위의 색상)
+                                    float[] wristHsv = new float[3];
+                                    Color.colorToHSV(wristColor, wristHsv);
+
+                                    // 살색 범위 설정 (Hue, Saturation, Value의 범위 설정)
+                                    float hueRange = 10; // 예: ±10도 허용 : 색조범위
+                                    float saturationRange = 0.2f; // ±20% : 채도 범위
+                                    float valueRange = 0.2f; // ±20% : 명도 범위
+
+                                    // 블러 처리: 살색인 부분만 블러 처리
+                                    for (int x = Math.max(0, indexRect.left); x < Math.min(photoBitmap.getWidth(), indexRect.right); x++) {
+                                        for (int y = Math.max(0, indexRect.top); y < Math.min(photoBitmap.getHeight(), indexRect.bottom); y++) {
+                                            int pixelColor = photoBitmap.getPixel(x, y);
+                                            float[] pixelHsv = new float[3];
+                                            Color.colorToHSV(pixelColor, pixelHsv);
+
+                                            // 살색으로 판정되는 경우 블러 처리
+                                            if (Math.abs(pixelHsv[0] - wristHsv[0]) <= hueRange &&
+                                                    Math.abs(pixelHsv[1] - wristHsv[1]) <= saturationRange &&
+                                                    Math.abs(pixelHsv[2] - wristHsv[2]) <= valueRange) {
+
+                                                // 블러링할 영역 (인덱스 손가락)
+                                                blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, new Rect(x, y, x + 1, y + 1));
+                                            }
+                                        }
+                                    }
+
+                                    for (int x = Math.max(0, pinkyRect.left); x < Math.min(photoBitmap.getWidth(), pinkyRect.right); x++) {
+                                        for (int y = Math.max(0, pinkyRect.top); y < Math.min(photoBitmap.getHeight(), pinkyRect.bottom); y++) {
+                                            int pixelColor = photoBitmap.getPixel(x, y);
+                                            float[] pixelHsv = new float[3];
+                                            Color.colorToHSV(pixelColor, pixelHsv);
+
+                                            // 살색으로 판정되는 경우 블러 처리
+                                            if (Math.abs(pixelHsv[0] - wristHsv[0]) <= hueRange &&
+                                                    Math.abs(pixelHsv[1] - wristHsv[1]) <= saturationRange &&
+                                                    Math.abs(pixelHsv[2] - wristHsv[2]) <= valueRange) {
+
+                                                // 블러링할 영역 (새끼 손가락)
+                                                blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, new Rect(x, y, x + 1, y + 1));
+                                            }
+                                        }
+                                    }
+                                }
+                                PoseLandmark[] fingers = {poses.getPoseLandmark(PoseLandmark.LEFT_INDEX),
+                                        poses.getPoseLandmark(PoseLandmark.LEFT_PINKY),
+                                        poses.getPoseLandmark(PoseLandmark.LEFT_WRIST)};
+                                blurredBitmap = applyBlurToFingers(blurredBitmap, fingers);
+                            }
+
+                            // 처리 완료 후 UI 업데이트
+                            Bitmap finalBlurredBitmap = blurredBitmap;
+                            runOnUiThread(() -> {
+                                imageView.setImageBitmap(finalBlurredBitmap);
+                                dialog.dismiss();
+                                Toast.makeText(AlbumActivity.this, "변환이 완료되었습니다:).", Toast.LENGTH_SHORT).show();
+                            });
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            runOnUiThread(() -> dialog.dismiss());
                         }
-                    }).start();
+                    });
                     image_Val = 0;
                 } else {
                     Toast.makeText(AlbumActivity.this, "이미지를 선택하지 않았습니다.", Toast.LENGTH_SHORT).show();
                 }
             }
         });
+
     }
 
     // 앨범에서 사진을 선택하면 uri를 따오고, uri를 bitmap으로 변환하여, imageView에 띄우는 함수
@@ -245,7 +288,14 @@ public class AlbumActivity extends AppCompatActivity {
         return null;
     }
 
-    private Bitmap applyBlurToFingers(Bitmap bitmap, PoseLandmark[] fingers) {
+    private static Bitmap applyBlurToFingers(Bitmap bitmap, PoseLandmark[] fingers) {
+        Bitmap mutableBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas canvas = new Canvas(mutableBitmap);
+        Paint paint = new Paint();
+        paint.setColor(Color.RED);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setAlpha(128);  // 반투명 빨간색
+
         for (PoseLandmark finger : fingers) {
             if (finger != null) {
                 PointF fingerPos = finger.getPosition();
@@ -258,10 +308,14 @@ public class AlbumActivity extends AppCompatActivity {
                 int bottomY = (int) (fingerPos.y + blurRadius); // 오른쪽 아래 Y 좌표
 
                 // 블러링 적용 (정사각형의 두 좌표 전달)
-                bitmap = AlbumActivity.BitmapUtil.blurRegion(bitmap, new Rect(leftX, topY, rightX, bottomY));
+                mutableBitmap = AlbumActivity.BitmapUtil.blurRegion(mutableBitmap, new Rect(leftX, topY, rightX, bottomY));
+
+                // 빨간색으로 해당 영역 덮기
+                Rect redOverlayRect = new Rect(leftX, topY, rightX, bottomY);
+                canvas.drawRect(redOverlayRect, paint);  // 해당 영역을 빨간색으로 덮음
             }
         }
-        return bitmap;
+        return mutableBitmap;
     }
 
     public static class BitmapUtil {
@@ -275,8 +329,6 @@ public class AlbumActivity extends AppCompatActivity {
                 this.height = h;
             }
         }
-
-
 
         public static Bitmap blurRegion(Bitmap bitmap, Rect region) {
             int left = Math.max(0, region.left);
@@ -371,87 +423,43 @@ public class AlbumActivity extends AppCompatActivity {
         private List<Face> faces;
         private Paint paint;
         private boolean isIrisBlurringOn;
-
         private Pose poses;
+        private boolean isFingerprintBlurringOn;
 
-        public CustomView(Context context, Bitmap bitmap, List<Face> faces,Pose poses ,boolean isIrisBlurringOn) {
+        public CustomView(Context context, Bitmap bitmap, List<Face> faces, Pose poses, boolean isIrisBlurringOn, boolean isFingerprintBlurringOn) {
             super(context);
             this.bitmap = bitmap;
             this.faces = faces;
-            this.isIrisBlurringOn = isIrisBlurringOn;
             this.poses = poses;
-
-            this.paint = new Paint();
-            paint.setColor(Color.BLACK);
-            paint.setStyle(Paint.Style.FILL);
-            paint.setAlpha(128);  // 50% 불투명도 설정
+            this.isIrisBlurringOn = isIrisBlurringOn;
+            this.isFingerprintBlurringOn = isFingerprintBlurringOn;
         }
-//
-//        @Override
-//        protected void onDraw(Canvas canvas) {
-//            super.onDraw(canvas);
-//
-//
-//            // 화면 크기와 비트맵 크기를 구합니다.
-//            int canvasWidth = canvas.getWidth();
-//            int canvasHeight = canvas.getHeight();
-//            int bitmapWidth = bitmap.getWidth();
-//            int bitmapHeight = bitmap.getHeight();
-//
-//            // 스케일을 계산합니다.
-//            float scale = Math.min((float) canvasWidth / bitmapWidth, (float) canvasHeight / bitmapHeight);
-//
-//            // 비트맵을 스케일과 위치를 적용하여 그립니다.
-//            float scaledWidth = scale * bitmapWidth;
-//            float scaledHeight = scale * bitmapHeight;
-//            float left = (canvasWidth - scaledWidth) / 2;
-//            float top = (canvasHeight - scaledHeight) / 2;
-//
-//            canvas.drawBitmap(bitmap, null, new Rect((int) left, (int) top, (int) (left + scaledWidth), (int) (top + scaledHeight)), null);
-//
-//
-//            // 얼굴 인식 결과를 그립니다.
-//
-//
-//            //손 인식결과를 그립니다.
-//            PoseLandmark leftWrist = poses.getPoseLandmark(PoseLandmark.LEFT_WRIST);
-//            PoseLandmark leftPinky = poses.getPoseLandmark(PoseLandmark.LEFT_PINKY);
-//            PoseLandmark leftIndex = poses.getPoseLandmark(PoseLandmark.LEFT_INDEX);
-//            PoseLandmark leftThumb = poses.getPoseLandmark(PoseLandmark.LEFT_THUMB);
-//            PointF lw = Objects.requireNonNull(leftWrist).getPosition();
-//            PointF lp = Objects.requireNonNull(leftPinky).getPosition();
-//            PointF li = Objects.requireNonNull(leftIndex).getPosition();
-//            PointF lt = Objects.requireNonNull(leftThumb).getPosition();
-//
-//            PoseLandmark rightWrist = poses.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
-//            PoseLandmark rightPinky = poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY);
-//            PoseLandmark rightIndex = poses.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
-//            PoseLandmark rightThumb = poses.getPoseLandmark(PoseLandmark.RIGHT_THUMB);
-//            PointF rw = Objects.requireNonNull(rightWrist).getPosition();
-//            PointF rp = Objects.requireNonNull(rightPinky).getPosition();
-//            PointF ri = Objects.requireNonNull(rightIndex).getPosition();
-//            PointF rt = Objects.requireNonNull(rightThumb).getPosition();
-//
-//
-//
-//            canvas.drawText("left_wrist",left+lw.x*scale,top+lw.y*scale,paint);
-//            canvas.drawText("left_pinky",left+lp.x*scale,top+lp.y*scale,paint);
-//            canvas.drawText("left_index",left+li.x*scale,top+li.y*scale,paint);
-//            canvas.drawText("left_thumb",left+lt.x*scale,top+lt.y*scale,paint);
-//
-//            canvas.drawText("right_wrist",left+rw.x*scale,top+rw.y*scale,paint);
-//            canvas.drawText("right_pinky",left+rp.x*scale,top+rp.y*scale,paint);
-//            canvas.drawText("right_index",left+ri.x*scale,top+ri.y*scale,paint);
-//            canvas.drawText("right_thumb",left+rt.x*scale,top+rt.y*scale,paint);
-//
-//
-//            float leftRadius= (float) Math.sqrt(Math.pow((li.x-lw.x),2)+Math.pow((li.y-lw.y),2 ));
-//            leftRadius=leftRadius*scale;
-//            float rightRadius= (float) Math.sqrt(Math.pow((ri.x-rw.x),2)+Math.pow((ri.y-rw.y),2 ));
-//            rightRadius=rightRadius*scale;
-//
-//            canvas.drawCircle(left+li.x*scale,top+li.y*scale,leftRadius,paint);
-//            canvas.drawCircle(left+ri.x*scale,top+ri.y*scale,rightRadius,paint);
-//        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+
+            // 원본 이미지를 캔버스에 그림
+            canvas.drawBitmap(bitmap, 0, 0, null);
+
+            // 얼굴 인식 및 홍채 블러 처리 후 빨간색 칠하기 추가
+            if (faces != null && isIrisBlurringOn) {
+                for (Face face : faces) {
+                    // 얼굴 및 홍채 위치 기반 블러 처리 코드
+                }
+            }
+
+            // 손가락 블러 처리 후 빨간색 칠하기
+            if (poses != null && isFingerprintBlurringOn) {
+                PoseLandmark leftIndex = poses.getPoseLandmark(PoseLandmark.LEFT_INDEX);
+                PoseLandmark leftPinky = poses.getPoseLandmark(PoseLandmark.LEFT_PINKY);
+                PoseLandmark leftWrist = poses.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+
+                PoseLandmark[] fingers = {leftIndex, leftPinky, leftWrist};
+
+                Bitmap updatedBitmap = applyBlurToFingers(bitmap, fingers);  // 블러 및 빨간색 적용
+                canvas.drawBitmap(updatedBitmap, 0, 0, null);  // 변경된 비트맵을 다시 그리기
+            }
+        }
     }
 }
