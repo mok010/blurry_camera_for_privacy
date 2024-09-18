@@ -150,68 +150,65 @@ public class AlbumActivity extends AppCompatActivity {
                                 }
                             }
 
-                            // 손가락 블러 처리
+                            // 왼손가락 블러 처리
                             if (isFingerprintBlurringOn) {
+                                // 살색 범위 설정 (Hue, Saturation, Value의 범위 설정)
+                                float hueRange = 10; // 예: ±10도 허용 : 색조범위
+                                float saturationRange = 0.2f; // ±20% : 채도 범위
+                                float valueRange = 0.2f; // ±20% : 명도 범위
+                                float bitmapWidth = photoBitmap.getWidth();
+                                float bitmapHeight = photoBitmap.getHeight();
+
+                                int newColor = Color.parseColor("#FF0000");///수정 테스트 컬러
+
                                 PoseLandmark leftIndex = poses.getPoseLandmark(PoseLandmark.LEFT_INDEX);
                                 PoseLandmark leftPinky = poses.getPoseLandmark(PoseLandmark.LEFT_PINKY);
                                 PoseLandmark leftWrist = poses.getPoseLandmark(PoseLandmark.LEFT_WRIST);
 
+                                PointF indexPos_l = leftIndex.getPosition();
+                                PointF pinkyPos_l = leftPinky.getPosition();
+                                PointF wristPos_l = leftWrist.getPosition();
 
-                                if (leftIndex != null && leftPinky != null && leftWrist != null) {
-                                    // 검지, 새끼, 손목 좌표 추출
-                                    PointF indexPos = leftIndex.getPosition();
-                                    PointF pinkyPos = leftPinky.getPosition();
-                                    PointF wristPos = leftWrist.getPosition();
 
+                                if (indexPos_l.x < 0 || indexPos_l.x >= bitmapWidth || indexPos_l.y < 0 || indexPos_l.y >= bitmapHeight ||
+                                        pinkyPos_l.x < 0 || pinkyPos_l.x >= bitmapWidth || pinkyPos_l.y < 0 || pinkyPos_l.y >= bitmapHeight ||
+                                        wristPos_l.x < 0 || wristPos_l.x >= bitmapWidth || wristPos_l.y < 0 || wristPos_l.y >= bitmapHeight) {
+                                    // 왼손이 없을 경우 처리 생략
+                                } else{
                                     // 손목을 기준으로 반지름을 계산 (검지와 손목, 새끼와 손목의 거리)
-                                    float indexRadius = (float) Math.sqrt(Math.pow(indexPos.x - wristPos.x, 2) + Math.pow(indexPos.y - wristPos.y, 2));
-                                    float pinkyRadius = (float) Math.sqrt(Math.pow(pinkyPos.x - wristPos.x, 2) + Math.pow(pinkyPos.y - wristPos.y, 2));
+                                    float indexRadius_l = (float) Math.sqrt(Math.pow(indexPos_l.x - wristPos_l.x, 2) + Math.pow(indexPos_l.y - wristPos_l.y, 2));
+                                    float pinkyRadius_l = (float) Math.sqrt(Math.pow(pinkyPos_l.x - wristPos_l.x, 2) + Math.pow(pinkyPos_l.y - wristPos_l.y, 2));
 
                                     // 두 영역 생성 (손목에서 검지, 새끼 거리만큼의 원)
-                                    Rect indexRect = new Rect(
-                                            (int) (indexPos.x - indexRadius * 1.5f),
-                                            (int) (indexPos.y - indexRadius * 1.5f),
-                                            (int) (indexPos.x + indexRadius * 1.5f),
-                                            (int) (indexPos.y + indexRadius * 1.5f)
+                                    Rect indexRect_l = new Rect(
+                                            (int) (indexPos_l.x - indexRadius_l * 1.5f),
+                                            (int) (indexPos_l.y - indexRadius_l * 1.5f),
+                                            (int) (indexPos_l.x + indexRadius_l * 1.5f),
+                                            (int) (indexPos_l.y + indexRadius_l * 1.5f)
                                     );
-                                    ///////수정 여기 원 아니고 원 끝점 ..?
-                                    Rect pinkyRect = new Rect(
-                                            (int) (pinkyPos.x - pinkyRadius * 1.5f),
-                                            (int) (pinkyPos.y - pinkyRadius * 1.5f),
-                                            (int) (pinkyPos.x + pinkyRadius * 1.5f),
-                                            (int) (pinkyPos.y + pinkyRadius * 1.5f)
+                                    Rect pinkyRect_l = new Rect(
+                                            (int) (pinkyPos_l.x - pinkyRadius_l * 1.5f),
+                                            (int) (pinkyPos_l.y - pinkyRadius_l * 1.5f),
+                                            (int) (pinkyPos_l.x + pinkyRadius_l * 1.5f),
+                                            (int) (pinkyPos_l.y + pinkyRadius_l * 1.5f)
                                     );
 
-                                    // 손목으로 하려고 했는데 소매가 있는 경우가 많아서 index로
-                                    int indexColor = photoBitmap.getPixel((int) indexPos.x, (int) indexPos.y);
-
-
-                                    // 살색 판단 기준을 설정 (예: 손목 색상에서 유사한 범위의 색상)
-                                    float[] wristHsv = new float[3];
-                                    Color.colorToHSV(indexColor, wristHsv);
-
-                                    // 살색 범위 설정 (Hue, Saturation, Value의 범위 설정)
-                                    float hueRange = 10; // 예: ±10도 허용 : 색조범위
-                                    float saturationRange = 0.2f; // ±20% : 채도 범위
-                                    float valueRange = 0.2f; // ±20% : 명도 범위
-
-                                    int newColor = Color.parseColor("#FF0000");///수정 테스트 컬러
+                                    // 살색 판단 기준을 설정 (예: 검지 색상에서 유사한 범위의 색상)
+                                    int indexColor_l = photoBitmap.getPixel((int) indexPos_l.x, (int) indexPos_l.y);
+                                    float[] wristHsv_l = new float[3];
+                                    Color.colorToHSV(indexColor_l, wristHsv_l);
 
                                     // 블러 처리: 살색인 부분만 블러 처리
-                                    for (int x = Math.max(0, indexRect.left); x < Math.min(photoBitmap.getWidth(), indexRect.right); x++) {
-                                        for (int y = Math.max(0, indexRect.top); y < Math.min(photoBitmap.getHeight(), indexRect.bottom); y++) {
-//                                            if (isBetweenWristAndFinger(x, y, wristPos, indexPos)) {
-//                                                continue;  // wristPos와 indexPos 사이의 영역은 탐색하지 않음
-//                                            }
+                                    for (int x = Math.max(0, indexRect_l.left); x < Math.min(photoBitmap.getWidth(), indexRect_l.right); x++) {
+                                        for (int y = Math.max(0, indexRect_l.top); y < Math.min(photoBitmap.getHeight(), indexRect_l.bottom); y++) {
+                                            int pixelColor_l = photoBitmap.getPixel(x, y);
+                                            float[] pixelHsv_l = new float[3];
+                                            Color.colorToHSV(pixelColor_l, pixelHsv_l);
 
-                                            int pixelColor = photoBitmap.getPixel(x, y);
-                                            float[] pixelHsv = new float[3];
-                                            Color.colorToHSV(pixelColor, pixelHsv); ////여기가 무슨 역할을 하지 수정
-
-                                            // 살색으로 판정되는 경우 블러 처리 ///수정 차이 이거 ~ 사이 기준으로 해야 하지않나  abs가 뭐더라
-                                            if (Math.abs(pixelHsv[0] - wristHsv[0]) <= hueRange &&
-                                                    Math.abs(pixelHsv[1] - wristHsv[1]) <= saturationRange &&
-                                                    Math.abs(pixelHsv[2] - wristHsv[2]) <= valueRange) {
+                                            // 살색으로 판정되는 경우 블러 처리
+                                            if (Math.abs(pixelHsv_l[0] - wristHsv_l[0]) <= hueRange &&
+                                                    Math.abs(pixelHsv_l[1] - wristHsv_l[1]) <= saturationRange &&
+                                                    Math.abs(pixelHsv_l[2] - wristHsv_l[2]) <= valueRange) {
 
                                                 // (임시)블러링 영역 (인덱스 손가락)
 //                                                blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, new Rect(x, y, x + 1, y + 1));
@@ -219,21 +216,92 @@ public class AlbumActivity extends AppCompatActivity {
                                             }
                                         }
                                     }
-                                    ///수정 위와 동일
-                                    for (int x = Math.max(0, pinkyRect.left); x < Math.min(photoBitmap.getWidth(), pinkyRect.right); x++) {
-                                        for (int y = Math.max(0, pinkyRect.top); y < Math.min(photoBitmap.getHeight(), pinkyRect.bottom); y++) {
-//                                            if (isBetweenWristAndFinger(x, y, wristPos, indexPos)) {
-//                                                continue;  // wristPos와 indexPos 사이의 영역은 탐색하지 않음
-//                                            }
-
-                                            int pixelColor = photoBitmap.getPixel(x, y);
-                                            float[] pixelHsv = new float[3];
-                                            Color.colorToHSV(pixelColor, pixelHsv);
+                                    for (int x = Math.max(0, pinkyRect_l.left); x < Math.min(photoBitmap.getWidth(), pinkyRect_l.right); x++) {
+                                        for (int y = Math.max(0, pinkyRect_l.top); y < Math.min(photoBitmap.getHeight(), pinkyRect_l.bottom); y++) {
+//
+                                            int pixelColor_l = photoBitmap.getPixel(x, y);
+                                            float[] pixelHsv_l = new float[3];
+                                            Color.colorToHSV(pixelColor_l, pixelHsv_l);
 
                                             // 살색으로 판정되는 경우 블러 처리
-                                            if (Math.abs(pixelHsv[0] - wristHsv[0]) <= hueRange &&
-                                                    Math.abs(pixelHsv[1] - wristHsv[1]) <= saturationRange &&
-                                                    Math.abs(pixelHsv[2] - wristHsv[2]) <= valueRange) {
+                                            if (Math.abs(pixelHsv_l[0] - wristHsv_l[0]) <= hueRange &&
+                                                    Math.abs(pixelHsv_l[1] - wristHsv_l[1]) <= saturationRange &&
+                                                    Math.abs(pixelHsv_l[2] - wristHsv_l[2]) <= valueRange) {
+
+                                                // (임시)블러링 영역 (새끼 손가락)
+//                                                blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, new Rect(x, y, x + 1, y + 1));
+                                                blurredBitmap = changePixelColor(blurredBitmap, x, y, newColor);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                PoseLandmark rightIndex = poses.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
+                                PoseLandmark rightPinky = poses.getPoseLandmark(PoseLandmark.RIGHT_PINKY);
+                                PoseLandmark rightWrist = poses.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
+
+                                PointF indexPos_r = rightIndex.getPosition();
+                                PointF pinkyPos_r = rightPinky.getPosition();
+                                PointF wristPos_r = rightWrist.getPosition();
+
+                                if (indexPos_r.x < 0 || indexPos_r.x >= bitmapWidth || indexPos_r.y < 0 || indexPos_r.y >= bitmapHeight ||
+                                        pinkyPos_r.x < 0 || pinkyPos_r.x >= bitmapWidth || pinkyPos_r.y < 0 || pinkyPos_r.y >= bitmapHeight ||
+                                        wristPos_r.x < 0 || wristPos_r.x >= bitmapWidth || wristPos_r.y < 0 || wristPos_r.y >= bitmapHeight) {
+                                    // 오른손이 없을 경우 처리 생략
+                                } else {
+                                    // 손목을 기준으로 반지름을 계산 (검지와 손목, 새끼와 손목의 거리)
+                                    float indexRadius_r = (float) Math.sqrt(Math.pow(indexPos_r.x - wristPos_r.x, 2) + Math.pow(indexPos_r.y - wristPos_r.y, 2));
+                                    float pinkyRadius_r = (float) Math.sqrt(Math.pow(pinkyPos_r.x - wristPos_r.x, 2) + Math.pow(pinkyPos_r.y - wristPos_r.y, 2));
+
+                                    // 두 영역 생성 (손목에서 검지, 새끼 거리만큼의 원)
+                                    Rect indexRect_r = new Rect(
+                                            (int) (indexPos_r.x - indexRadius_r * 1.5f),
+                                            (int) (indexPos_r.y - indexRadius_r * 1.5f),
+                                            (int) (indexPos_r.x + indexRadius_r * 1.5f),
+                                            (int) (indexPos_r.y + indexRadius_r * 1.5f)
+                                    );
+                                    Rect pinkyRect_r = new Rect(
+                                            (int) (pinkyPos_r.x - pinkyRadius_r * 1.5f),
+                                            (int) (pinkyPos_r.y - pinkyRadius_r * 1.5f),
+                                            (int) (pinkyPos_r.x + pinkyRadius_r * 1.5f),
+                                            (int) (pinkyPos_r.y + pinkyRadius_r * 1.5f)
+                                    );
+
+                                    /// 살색 판단 기준을 설정 (예: 검지 색상에서 유사한 범위의 색상)
+                                    int indexColor_r = photoBitmap.getPixel((int) indexPos_r.x, (int) indexPos_r.y);
+                                    float[] wristHsv_r = new float[3];
+                                    Color.colorToHSV(indexColor_r, wristHsv_r);
+
+                                    // 블러 처리: 살색인 부분만 블러 처리
+                                    for (int x = Math.max(0, indexRect_r.left); x < Math.min(photoBitmap.getWidth(), indexRect_r.right); x++) {
+                                        for (int y = Math.max(0, indexRect_r.top); y < Math.min(photoBitmap.getHeight(), indexRect_r.bottom); y++) {
+
+                                            int pixelColor_r = photoBitmap.getPixel(x, y);
+                                            float[] pixelHsv_r = new float[3];
+                                            Color.colorToHSV(pixelColor_r, pixelHsv_r);
+
+                                            // 살색으로 판정되는 경우 블러 처리
+                                            if (Math.abs(pixelHsv_r[0] - wristHsv_r[0]) <= hueRange &&
+                                                    Math.abs(pixelHsv_r[1] - wristHsv_r[1]) <= saturationRange &&
+                                                    Math.abs(pixelHsv_r[2] - wristHsv_r[2]) <= valueRange) {
+
+                                                // (임시)블러링 영역 (인덱스 손가락)
+//                                                blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, new Rect(x, y, x + 1, y + 1));
+                                                blurredBitmap = changePixelColor(blurredBitmap, x, y, newColor);
+                                            }
+                                        }
+                                    }
+                                    for (int x = Math.max(0, pinkyRect_r.left); x < Math.min(photoBitmap.getWidth(), pinkyRect_r.right); x++) {
+                                        for (int y = Math.max(0, pinkyRect_r.top); y < Math.min(photoBitmap.getHeight(), pinkyRect_r.bottom); y++) {
+
+                                            int pixelColor_r = photoBitmap.getPixel(x, y);
+                                            float[] pixelHsv_r = new float[3];
+                                            Color.colorToHSV(pixelColor_r, pixelHsv_r);
+
+                                            // 살색으로 판정되는 경우 블러 처리
+                                            if (Math.abs(pixelHsv_r[0] - wristHsv_r[0]) <= hueRange &&
+                                                    Math.abs(pixelHsv_r[1] - wristHsv_r[1]) <= saturationRange &&
+                                                    Math.abs(pixelHsv_r[2] - wristHsv_r[2]) <= valueRange) {
 
                                                 // (임시)블러링 영역 (새끼 손가락)
 //                                                blurredBitmap = AlbumActivity.BitmapUtil.blurRegion(blurredBitmap, new Rect(x, y, x + 1, y + 1));
@@ -278,7 +346,7 @@ public class AlbumActivity extends AppCompatActivity {
         float shiftedMidX = midX + (wristPos.x - midX) * shiftFactor;
         float shiftedMidY = midY + (wristPos.y - midY) * shiftFactor;
 
-        // 1.5배 크기의 정사각형 영역의 반지름
+        // 2배 크기의 정사각형 영역의 반지름
         float halfSide = distance * 2f / 2;
 
         // 당겨진 중점을 기준으로 정사각형 범위 계산
