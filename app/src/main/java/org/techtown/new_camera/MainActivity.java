@@ -37,6 +37,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.google.mlkit.vision.face.Face;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -73,8 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private final TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-            // 텍스쳐뷰가 사용 가능할 때 카메라를 여는 함수 호출
-            openCamera();
+            openCamera();  // 텍스쳐뷰가 사용 가능할 때 카메라를 여는 함수 호출
         }
 
         @Override
@@ -95,20 +96,17 @@ public class MainActivity extends AppCompatActivity {
     private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
         @Override
         public void onOpened(CameraDevice camera) {
-            // 카메라가 성공적으로 열리면 CameraDevice 인스턴스를 할당하고 미리보기 시작
             cameraDevice = camera;
             createCameraPreview();
         }
 
         @Override
         public void onDisconnected(CameraDevice camera) {
-            // 카메라 연결이 끊기면 닫음
             cameraDevice.close();
         }
 
         @Override
         public void onError(CameraDevice camera, int error) {
-            // 에러 발생시 카메라 닫고 null 할당
             cameraDevice.close();
             cameraDevice = null;
         }
@@ -126,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
         ImageButton rotateButton = findViewById(R.id.btn_rotate);
         ImageButton albumButton = findViewById(R.id.btn_album);
 
-        // 권한 확인 요청
         if (chkPermission()) {
             Toast.makeText(this, "권한 승인 완료", Toast.LENGTH_SHORT).show();
         }
@@ -134,15 +131,13 @@ public class MainActivity extends AppCompatActivity {
         takePictureButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 사진 촬영 메소드 호출
-                takePicture();
+                takePicture();  // 사진 촬영 메소드 호출
             }
         });
 
         albumButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // AlbumActivity.class와 연결
                 Intent intent = new Intent(getApplicationContext(), AlbumActivity.class);
                 startActivity(intent);
             }
@@ -151,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
         rotateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 전면/후면 카메라 전환 메소드 호출
                 switchCamera();
             }
         });
@@ -226,6 +220,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        closeCameraSession();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        closeCameraSession();
+    }
+
+    private void closeCameraSession() {
+        if (cameraCaptureSession != null) {
+            cameraCaptureSession.close();
+            cameraCaptureSession = null;
+        }
         if (cameraDevice != null) {
             cameraDevice.close();
             cameraDevice = null;
@@ -271,9 +279,8 @@ public class MainActivity extends AppCompatActivity {
                     byte[] bytes = new byte[buffer.capacity()];
                     buffer.get(bytes);
 
-                    // 비트맵으로 변환 후 MainActivity2로 전송
                     Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                    saveImageAndSendToNextActivity(bitmap, path);
+                    processFaceAndBlur(bitmap, path);
 
                     image.close();
                 }
@@ -310,9 +317,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // 사진을 저장하고 다음 액티비티로 넘기는 메소드(2024 /09/15 수정)
+    private void processFaceAndBlur(Bitmap bitmap, String path) {
+        ImageProcessor.processInputImage(bitmap).thenAccept(faces -> {
+            Bitmap blurredBitmap = applyBlur(bitmap, faces);
+            saveImageAndSendToNextActivity(blurredBitmap, path);
+        }).exceptionally(e -> {
+            handleCameraError(e);
+            return null;
+        });
+    }
+
+    private Bitmap applyBlur(Bitmap bitmap, List<Face> faces) {
+        return bitmap;  // 여기에서 얼굴 영역 블러 처리 로직 추가
+    }
+
+    private void handleCameraError(Throwable e) {
+        Toast.makeText(this, "카메라 오류가 발생했습니다: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+    }
+
     private void saveImageAndSendToNextActivity(Bitmap bitmap, String path) {
-        // Android 10 이상에서 MediaStore 사용
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
@@ -331,7 +354,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } else {
-            // 기존 Android 10 이하의 방식
             File file = new File(path);
             try (OutputStream out = new FileOutputStream(file)) {
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
@@ -339,13 +361,11 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            // 사진을 MediaStore에 추가하여 갤러리에 반영되도록 함
             MediaScannerConnection.scanFile(this, new String[]{file.getAbsolutePath()}, null, (path1, uri) -> {
                 Toast.makeText(this, "사진이 갤러리에 저장되었습니다.", Toast.LENGTH_SHORT).show();
             });
         }
 
-        // 사진 촬영 후 MainActivity2로 이동, img 경로 전달
         Intent intent = new Intent(MainActivity.this, MainActivity2.class);
         intent.putExtra("img", path);
         startActivity(intent);
