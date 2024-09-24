@@ -1,6 +1,7 @@
 package org.techtown.new_camera;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.PointF;
 import android.graphics.Rect;
 
@@ -51,34 +52,36 @@ public class ImageProcessor {
      * @param photoBitmap 얼굴을 감지할 비트맵 이미지
      * @return 얼굴 리스트를 비동기적으로 반환하는 CompletableFuture
      */
-    public static CompletableFuture<List<Face>> processInputImage(Bitmap photoBitmap) {
-        CompletableFuture<List<Face>> future = new CompletableFuture<>();
+    public static CompletableFuture<Bitmap> processInputImage(Bitmap photoBitmap) {
+        CompletableFuture<Bitmap> future = new CompletableFuture<>();
         InputImage image = InputImage.fromBitmap(photoBitmap, 0);
 
         faceDetector.process(image)
                 .addOnSuccessListener(new OnSuccessListener<List<Face>>() {
                     @Override
                     public void onSuccess(List<Face> faces) {
-                        List<Rect> faceBoundsList = new ArrayList<>(); // 얼굴 좌표를 담을 리스트
+                        Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
+                        Canvas canvas = new Canvas(blurredBitmap);
 
-                        // 얼굴 목록에서 각 얼굴의 랜드마크 좌표를 리스트에 추가
+                        // 얼굴 목록에서 각 얼굴의 랜드마크 좌표를 리스트에 추가 및 블러 처리
                         for (Face face : faces) {
                             FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
                             FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
                             if (leftEye != null && rightEye != null) {
                                 PointF leftEyePos = leftEye.getPosition();
                                 PointF rightEyePos = rightEye.getPosition();
-                                // 예시: 눈 주위 영역을 리스트에 추가
-                                faceBoundsList.add(new Rect(
-                                        (int) (leftEyePos.x - 20), (int) (leftEyePos.y - 20),
-                                        (int) (leftEyePos.x + 20), (int) (leftEyePos.y + 20)));
-                                faceBoundsList.add(new Rect(
-                                        (int) (rightEyePos.x - 20), (int) (rightEyePos.y - 20),
-                                        (int) (rightEyePos.x + 20), (int) (rightEyePos.y + 20)));
+                                // 눈 주위 영역 블러 처리
+                                Rect leftEyeRect = new Rect((int) (leftEyePos.x - 20), (int) (leftEyePos.y - 20),
+                                        (int) (leftEyePos.x + 20), (int) (leftEyePos.y + 20));
+                                Rect rightEyeRect = new Rect((int) (rightEyePos.x - 20), (int) (rightEyePos.y - 20),
+                                        (int) (rightEyePos.x + 20), (int) (rightEyePos.y + 20));
+
+                                // 블러 처리 함수 호출
+                                blurredBitmap = BitmapUtil.blurRegion(blurredBitmap, leftEyeRect);
+                                blurredBitmap = BitmapUtil.blurRegion(blurredBitmap, rightEyeRect);
                             }
                         }
-                        // 필요한 경우 faceBoundsList로 추가적인 처리 (예: 블러링)
-                        future.complete(faces);  // 얼굴 목록을 반환
+                        future.complete(blurredBitmap);  // 블러링이 적용된 이미지를 반환
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -96,17 +99,18 @@ public class ImageProcessor {
      * @param photoBitmap 포즈를 감지할 비트맵 이미지
      * @return 감지된 포즈를 비동기적으로 반환하는 CompletableFuture
      */
-    public static CompletableFuture<Pose> processInputImagePose(Bitmap photoBitmap) {
-        CompletableFuture<Pose> futurePose = new CompletableFuture<>();
+    public static CompletableFuture<Bitmap> processInputImagePose(Bitmap photoBitmap) {
+        CompletableFuture<Bitmap> futurePose = new CompletableFuture<>();
         InputImage image = InputImage.fromBitmap(photoBitmap, 0);
 
         poseDetector.process(image)
                 .addOnSuccessListener(new OnSuccessListener<Pose>() {
                     @Override
                     public void onSuccess(Pose pose) {
-                        List<Rect> poseBoundsList = new ArrayList<>(); // 포즈 좌표를 담을 리스트
+                        Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
+                        Canvas canvas = new Canvas(blurredBitmap);
 
-                        // 포즈 랜드마크 목록에서 각 손가락과 손목 좌표를 리스트에 추가
+                        // 포즈 랜드마크 목록에서 손목과 손가락 좌표를 이용해 블러 처리
                         PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
                         PoseLandmark rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
                         PoseLandmark leftIndex = pose.getPoseLandmark(PoseLandmark.LEFT_INDEX);
@@ -115,29 +119,30 @@ public class ImageProcessor {
                         if (leftWrist != null && leftIndex != null) {
                             PointF leftWristPos = leftWrist.getPosition();
                             PointF leftIndexPos = leftIndex.getPosition();
-                            // 왼 손목과 검지 주변 영역을 리스트에 추가
-                            poseBoundsList.add(new Rect(
-                                    (int) (leftWristPos.x - 30), (int) (leftWristPos.y - 30),
-                                    (int) (leftWristPos.x + 30), (int) (leftWristPos.y + 30)));
-                            poseBoundsList.add(new Rect(
-                                    (int) (leftIndexPos.x - 30), (int) (leftIndexPos.y - 30),
-                                    (int) (leftIndexPos.x + 30), (int) (leftIndexPos.y + 30)));
+                            // 손목과 검지 주변 영역 블러 처리
+                            Rect leftWristRect = new Rect((int) (leftWristPos.x - 30), (int) (leftWristPos.y - 30),
+                                    (int) (leftWristPos.x + 30), (int) (leftWristPos.y + 30));
+                            Rect leftIndexRect = new Rect((int) (leftIndexPos.x - 30), (int) (leftIndexPos.y - 30),
+                                    (int) (leftIndexPos.x + 30), (int) (leftIndexPos.y + 30));
+
+                            blurredBitmap = BitmapUtil.blurRegion(blurredBitmap, leftWristRect);
+                            blurredBitmap = BitmapUtil.blurRegion(blurredBitmap, leftIndexRect);
                         }
 
                         if (rightWrist != null && rightIndex != null) {
                             PointF rightWristPos = rightWrist.getPosition();
                             PointF rightIndexPos = rightIndex.getPosition();
-                            // 오른 손목과 검지 주변 영역을 리스트에 추가
-                            poseBoundsList.add(new Rect(
-                                    (int) (rightWristPos.x - 30), (int) (rightWristPos.y - 30),
-                                    (int) (rightWristPos.x + 30), (int) (rightWristPos.y + 30)));
-                            poseBoundsList.add(new Rect(
-                                    (int) (rightIndexPos.x - 30), (int) (rightIndexPos.y - 30),
-                                    (int) (rightIndexPos.x + 30), (int) (rightIndexPos.y + 30)));
+                            // 오른손목과 검지 주변 영역 블러 처리
+                            Rect rightWristRect = new Rect((int) (rightWristPos.x - 30), (int) (rightWristPos.y - 30),
+                                    (int) (rightWristPos.x + 30), (int) (rightWristPos.y + 30));
+                            Rect rightIndexRect = new Rect((int) (rightIndexPos.x - 30), (int) (rightIndexPos.y - 30),
+                                    (int) (rightIndexPos.x + 30), (int) (rightIndexPos.y + 30));
+
+                            blurredBitmap = BitmapUtil.blurRegion(blurredBitmap, rightWristRect);
+                            blurredBitmap = BitmapUtil.blurRegion(blurredBitmap, rightIndexRect);
                         }
 
-                        // 필요한 경우 poseBoundsList로 추가적인 블러링 처리
-                        futurePose.complete(pose);  // 감지된 포즈 반환
+                        futurePose.complete(blurredBitmap);  // 블러링이 적용된 이미지를 반환
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
@@ -148,5 +153,14 @@ public class ImageProcessor {
                 });
 
         return futurePose;
+    }
+
+    public static class BitmapUtil {
+
+        // 특정 영역을 블러 처리하는 함수
+        public static Bitmap blurRegion(Bitmap bitmap, Rect region) {
+            // 블러링 처리를 수행하는 코드 (구현 필요)
+            return bitmap; // 실제 블러링 구현 필요
+        }
     }
 }
