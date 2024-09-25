@@ -1,0 +1,7 @@
+cogn_data/
+sleep_data/
+walk_data/
+*.csv
+!cogn_proc.ipynb
+!sleep_proc.ipynb
+!walk_proc.ipynb
