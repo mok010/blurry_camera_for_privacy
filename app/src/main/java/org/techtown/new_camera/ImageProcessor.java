@@ -159,7 +159,7 @@ public class ImageProcessor {
 
         // 특정 영역을 블러 처리하는 함수
         public static Bitmap blurRegion(Bitmap bitmap, Rect region) {
-            // 블러링 처리를 수행하는 코드 (구현 필요)
+            // 블러링 처리를 수행하는 코드
             return bitmap; // 실제 블러링 구현 필요
         }
     }

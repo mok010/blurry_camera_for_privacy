@@ -90,6 +90,7 @@ public class AlbumActivity extends AppCompatActivity {
         }
     }
 
+    //수정 필요 부분
     private Bitmap getBitmapFromUri(Uri uri) {
         try {
             ParcelFileDescriptor parcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r");
