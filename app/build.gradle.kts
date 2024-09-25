@@ -14,6 +14,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // RenderScript 설정 추가
+        renderscriptTargetApi 18
+        renderscriptSupportModeEnabled true
     }
 
     buildTypes {
@@ -25,6 +29,7 @@ android {
             )
         }
     }
+    
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8

@@ -51,9 +51,9 @@ public class AlbumActivity extends AppCompatActivity {
                 dialog.show();
 
                 // 얼굴 감지 및 블러링 처리
-                CompletableFuture<Bitmap> faceFuture = ImageProcessor.processInputImage(photoBitmap);
+                CompletableFuture<Bitmap> faceFuture = ImageProcessor.processInputImage(photoBitmap, AlbumActivity.this);
                 // 포즈 감지 및 블러링 처리
-                CompletableFuture<Bitmap> poseFuture = ImageProcessor.processInputImagePose(photoBitmap);
+                CompletableFuture<Bitmap> poseFuture = ImageProcessor.processInputImagePose(photoBitmap, AlbumActivity.this);
 
                 // 얼굴과 포즈 모두에 블러링을 처리한 최종 이미지
                 faceFuture.thenCombine(poseFuture, (faceBitmap, poseBitmap) -> poseBitmap)
@@ -90,7 +90,6 @@ public class AlbumActivity extends AppCompatActivity {
         }
     }
 
-    //수정 필요 부분
     private Bitmap getBitmapFromUri(Uri uri) {
         try {
             ParcelFileDescriptor parcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r");
