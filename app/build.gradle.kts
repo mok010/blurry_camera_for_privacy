@@ -15,9 +15,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // RenderScript 설정 추가
-        renderscriptTargetApi 18
-        renderscriptSupportModeEnabled true
+        // RenderScript 설정 추가 (Kotlin 스크립트 방식)
+        renderscriptTargetApi = 18
+        renderscriptSupportModeEnabled = true
     }
 
     buildTypes {
@@ -29,7 +29,7 @@ android {
             )
         }
     }
-    
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8

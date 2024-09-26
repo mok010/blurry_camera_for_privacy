@@ -34,7 +34,7 @@ public class BitmapUtil {
         Allocation output = Allocation.createTyped(rs, input.getType());
 
         ScriptIntrinsicBlur script = ScriptIntrinsicBlur.create(rs, Element.U8_4(rs));
-        script.setRadius(10);  // 블러 반경 설정
+        script.setRadius(25);  // 블러 반경 조정
         script.setInput(input);
         script.forEach(output);
 

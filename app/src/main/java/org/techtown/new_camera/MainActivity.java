@@ -8,6 +8,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
+import android.graphics.PointF;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -38,6 +40,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.google.mlkit.vision.face.Face;
+import com.google.mlkit.vision.face.FaceLandmark;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -318,9 +321,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void processFaceAndBlur(Bitmap bitmap, String path) {
-        ImageProcessor.processInputImage(bitmap).thenAccept(faces -> {
-            Bitmap blurredBitmap = applyBlur(bitmap, faces);
-            saveImageAndSendToNextActivity(blurredBitmap, path);
+        ImageProcessor.processInputImage(bitmap, this).thenAccept(faces -> {
+            // faces는 List<Face> 타입이어야 합니다.
+            if (faces != null) {
+                Bitmap blurredBitmap = applyBlur(bitmap, faces);  // 블러 처리
+                saveImageAndSendToNextActivity(blurredBitmap, path);
+            }
         }).exceptionally(e -> {
             handleCameraError(e);
             return null;
@@ -328,8 +334,36 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private Bitmap applyBlur(Bitmap bitmap, List<Face> faces) {
-        return bitmap;  // 여기에서 얼굴 영역 블러 처리 로직 추가
+        Bitmap blurredBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+
+        // 얼굴 목록을 순회하며 각 얼굴에 블러 처리 적용
+        for (Face face : faces) {
+            FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
+            FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
+
+            if (leftEye != null) {
+                PointF leftEyePos = leftEye.getPosition();
+                Rect leftEyeRect = new Rect(
+                        (int) (leftEyePos.x - 20), (int) (leftEyePos.y - 20),
+                        (int) (leftEyePos.x + 20), (int) (leftEyePos.y + 20)
+                );
+                blurredBitmap = BitmapUtil.blurRegion(this, blurredBitmap, leftEyeRect);  // 블러 처리
+            }
+
+            if (rightEye != null) {
+                PointF rightEyePos = rightEye.getPosition();
+                Rect rightEyeRect = new Rect(
+                        (int) (rightEyePos.x - 20), (int) (rightEyePos.y - 20),
+                        (int) (rightEyePos.x + 20), (int) (rightEyePos.y + 20)
+                );
+                blurredBitmap = BitmapUtil.blurRegion(this, blurredBitmap, rightEyeRect);  // 블러 처리
+            }
+        }
+
+        return blurredBitmap;
     }
+
+
 
     private void handleCameraError(Throwable e) {
         Toast.makeText(this, "카메라 오류가 발생했습니다: " + e.getMessage(), Toast.LENGTH_SHORT).show();
