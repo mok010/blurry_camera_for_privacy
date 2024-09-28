@@ -49,11 +49,13 @@ A camera application that automatically blurs iris and fingerprints to safely pr
 - **Android Studio** : 전체적인 코드 구현
 
 - **Kakao Oven** : 구체적인 UI 스케치
+- **ML Ki**t: 동공 및 손가락 탐지를 위한 머신러닝 기반 탐지 기능 적용
 
 **2.Development Tools**
 
 - **Android Studio**: Overall code implementation
 
 - **Kakao Oven**: Specific UI sketch
+- **ML Kit**: Applied for machine learning-based detection of pupils and fingers
 
 -------------------
