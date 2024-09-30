@@ -58,39 +58,63 @@ public class AlbumActivity extends AppCompatActivity {
                 dialog.setMessage("보호중입니다...");
                 dialog.show();
 
-                // 얼굴 감지 및 블러링 처리
-                CompletableFuture<List<Face>> faceFuture = ImageProcessor.processInputImage(photoBitmap, AlbumActivity.this);
-                // 포즈 감지 및 블러링 처리
-                CompletableFuture<Pose> poseFuture = ImageProcessor.processInputImagePose(photoBitmap, AlbumActivity.this);
+                // 얼굴 및 포즈 감지 및 블러링 처리
+                executor.execute(() -> {
+                    try {
+                        // 얼굴 및 포즈 감지
+                        List<Face> faces = ImageProcessor.processInputImage(photoBitmap, AlbumActivity.this).get();
+                        Pose pose = ImageProcessor.processInputImagePose(photoBitmap, AlbumActivity.this).get();
 
-                // 얼굴과 포즈 모두에 블러링을 처리한 최종 이미지
-                faceFuture.thenCombine(poseFuture, (faces, pose) -> {
-                    // 얼굴 및 포즈 감지 결과 디버깅
-                    if (faces == null || faces.isEmpty()) {
-                        Toast.makeText(AlbumActivity.this, "얼굴이 감지되지 않았습니다.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(AlbumActivity.this, "감지된 얼굴 수: " + faces.size(), Toast.LENGTH_SHORT).show();
+                        Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
+
+                        // 동공 블러링 활성화 및 얼굴이 감지된 경우
+                        boolean isIrisBlurringOn = true;  // 이 부분을 조건에 맞게 설정해주세요
+                        if (isIrisBlurringOn && faces.size() > 0) {
+                            // 얼굴 블러 처리
+                            for (Face face : faces) {
+                                // 눈 블러 처리
+                                float eyeRadius = face.getBoundingBox().width() * 0.03f;
+                                FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
+                                if (leftEye != null) {
+                                    PointF leftEyePos = leftEye.getPosition();
+                                    Rect leftEyeRect = new Rect(
+                                            (int) (leftEyePos.x - eyeRadius),
+                                            (int) (leftEyePos.y - eyeRadius),
+                                            (int) (leftEyePos.x + eyeRadius),
+                                            (int) (leftEyePos.y + eyeRadius)
+                                    );
+                                    blurredBitmap = BitmapUtil.blurRegion(AlbumActivity.this, blurredBitmap, leftEyeRect);
+                                }
+
+                                // 오른쪽 눈도 동일한 방식으로 처리
+                                FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
+                                if (rightEye != null) {
+                                    PointF rightEyePos = rightEye.getPosition();
+                                    Rect rightEyeRect = new Rect(
+                                            (int) (rightEyePos.x - eyeRadius),
+                                            (int) (rightEyePos.y - eyeRadius),
+                                            (int) (rightEyePos.x + eyeRadius),
+                                            (int) (rightEyePos.y + eyeRadius)
+                                    );
+                                    blurredBitmap = BitmapUtil.blurRegion(AlbumActivity.this, blurredBitmap, rightEyeRect);
+                                }
+                            }
+                        }
+
+                        // 포즈 처리 로직은 기존 방식 유지 (생략 가능)
+                        Bitmap faceAndPoseBlurredBitmap = applyPoseBlur(blurredBitmap, pose);
+
+                        // UI 업데이트
+                        runOnUiThread(() -> {
+                            imageView.setImageBitmap(faceAndPoseBlurredBitmap);
+                            dialog.dismiss();
+                            Toast.makeText(AlbumActivity.this, "변환이 완료되었습니다:)", Toast.LENGTH_SHORT).show();
+                        });
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        runOnUiThread(dialog::dismiss);
                     }
-
-                    // 포즈 감지 결과 확인
-                    if (pose == null || pose.getAllPoseLandmarks().isEmpty()) {
-                        Toast.makeText(AlbumActivity.this, "포즈가 감지되지 않았습니다.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(AlbumActivity.this, "감지된 포즈 랜드마크 수: " + pose.getAllPoseLandmarks().size(), Toast.LENGTH_SHORT).show();
-                    }
-
-                    Bitmap faceBlurredBitmap = applyFaceBlur(photoBitmap, faces);
-                    return applyPoseBlur(faceBlurredBitmap, pose);  // 얼굴 블러링 후 포즈 블러링
-                }).thenAccept(blurredBitmap -> {
-                    runOnUiThread(() -> {
-                        imageView.setImageBitmap(blurredBitmap);
-                        dialog.dismiss();
-                        Toast.makeText(AlbumActivity.this, "변환이 완료되었습니다:)", Toast.LENGTH_SHORT).show();
-                    });
-                }).exceptionally(e -> {
-                    e.printStackTrace();
-                    runOnUiThread(dialog::dismiss);
-                    return null;
                 });
 
                 image_Val = 0;
