@@ -90,8 +90,12 @@ public class AlbumActivity extends AppCompatActivity {
                         if(FingerMainActivity.isFingerprintBlurringOn){
                             PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
                             PoseLandmark leftIndex = pose.getPoseLandmark(PoseLandmark.LEFT_INDEX);
+                            PoseLandmark leftPinky = pose.getPoseLandmark(PoseLandmark.LEFT_PINKY);
+
+
                             PoseLandmark rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
                             PoseLandmark rightIndex = pose.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
+                            PoseLandmark rightPinky = pose.getPoseLandmark(PoseLandmark.RIGHT_PINKY);
 
 // 왼손 사각형 영역 블러 처리
                             if (leftWrist != null && leftIndex != null) {
@@ -99,10 +103,30 @@ public class AlbumActivity extends AppCompatActivity {
                                 PointF leftIndexPos = leftIndex.getPosition();
                                 blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, leftHandRect, leftIndexPos);
                             }
+                            if (leftWrist != null && leftPinky != null) {
+                                Rect leftHandRect = getHandRectRegion(leftWrist, leftPinky);
+                                PointF leftPinkyPos = leftPinky.getPosition();
+                                blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, leftHandRect, leftPinkyPos);
+                            }
+                            if(leftPinky != null&& leftIndex != null){
+                                Rect leftHandRect = getHandRectRegion(leftPinky, leftIndex);
+                                PointF leftIndexPos = leftIndex.getPosition();
+                                blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, leftHandRect, leftIndexPos);
+                            }
 
 // 오른손 사각형 영역 블러 처리
                             if (rightWrist != null && rightIndex != null) {
                                 Rect rightHandRect = getHandRectRegion(rightWrist, rightIndex);
+                                PointF rightIndexPos = rightIndex.getPosition();
+                                blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, rightHandRect, rightIndexPos);
+                            }
+                            if (rightWrist != null && rightPinky != null) {
+                                Rect rightHandRect = getHandRectRegion(rightWrist, rightPinky);
+                                PointF rightPinkyPos = rightPinky.getPosition();
+                                blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, rightHandRect, rightPinkyPos);
+                            }
+                            if(rightPinky != null&& rightIndex != null){
+                                Rect rightHandRect = getHandRectRegion(rightPinky, rightIndex);
                                 PointF rightIndexPos = rightIndex.getPosition();
                                 blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, rightHandRect, rightIndexPos);
                             }
@@ -169,8 +193,8 @@ public class AlbumActivity extends AppCompatActivity {
         float centerX = index.getPosition().x;
         float centerY = index.getPosition().y;
 
-        // 거리의 3배를 한 변으로 하는 사각형 계산
-        float halfSide = (float) (distance * 1.5); // 손목까지의 거리의 2배가 한 변이므로, halfSide는 거리 그대로 사용
+        // 거리의 2배를 한 변으로 하는 사각형 계산
+        float halfSide =  (distance ); // 손목까지의 거리의 2배가 한 변이므로, halfSide는 거리 그대로 사용
 
         // 사각형의 좌상단과 우하단 좌표 계산
         float left = centerX - halfSide;
