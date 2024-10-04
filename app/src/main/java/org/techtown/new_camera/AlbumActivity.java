@@ -1,6 +1,7 @@
 package org.techtown.new_camera;
 
 import android.app.ProgressDialog;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -8,7 +9,9 @@ import android.graphics.PointF;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -23,6 +26,7 @@ import com.google.mlkit.vision.pose.PoseLandmark;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -74,14 +78,12 @@ public class AlbumActivity extends AppCompatActivity {
                                 FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
                                 if (leftEye != null) {
                                     PointF leftEyePos = leftEye.getPosition();
-
                                     blurredBitmap = BitmapUtil.blurCircularRegion(AlbumActivity.this, blurredBitmap, leftEyePos.x, leftEyePos.y, eyeRadius);
                                 }
 
                                 FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
                                 if (rightEye != null) {
                                     PointF rightEyePos = rightEye.getPosition();
-
                                     blurredBitmap = BitmapUtil.blurCircularRegion(AlbumActivity.this, blurredBitmap, rightEyePos.x, rightEyePos.y, eyeRadius);
                                 }
                             }
@@ -132,12 +134,15 @@ public class AlbumActivity extends AppCompatActivity {
                             }
                         }
 
+                        // 블러 처리 후 앨범에 저장
+                        saveImageToGallery(blurredBitmap);  // 블러 처리 후 이미지 저장
+
                         // UI 업데이트
                         Bitmap finalBlurredBitmap = blurredBitmap;
                         runOnUiThread(() -> {
                             imageView.setImageBitmap(finalBlurredBitmap);
                             dialog.dismiss();
-                            Toast.makeText(AlbumActivity.this, "변환이 완료되었습니다:)", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(AlbumActivity.this, "변환 및 저장이 완료되었습니다:)", Toast.LENGTH_SHORT).show();
                         });
 
                     } catch (Exception e) {
@@ -182,6 +187,24 @@ public class AlbumActivity extends AppCompatActivity {
         return null;
     }
 
+    // 블러링된 이미지를 앨범에 저장하는 메서드 추가
+    private void saveImageToGallery(Bitmap bitmap) {
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.Images.Media.DISPLAY_NAME, System.currentTimeMillis() + ".jpg");  // 파일명
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES);  // 앨범 경로
+
+        Uri imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+
+        try (OutputStream out = getContentResolver().openOutputStream(imageUri)) {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);  // JPEG로 저장
+            Toast.makeText(this, "이미지가 앨범에 저장되었습니다.", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "이미지 저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private Rect getHandRectRegion(PoseLandmark wrist, PoseLandmark index) {
         // 손목에서 검지까지의 거리 계산
         float distance = (float) Math.sqrt(
@@ -205,8 +228,7 @@ public class AlbumActivity extends AppCompatActivity {
         // 정사각형 Rect 반환
         return new Rect((int)left, (int)top, (int)right, (int)bottom);
     }
-
-
 }
+
 
 
