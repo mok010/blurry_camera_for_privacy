@@ -23,8 +23,8 @@ import com.google.mlkit.vision.pose.PoseLandmark;
 
 import java.io.FileDescriptor;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -58,55 +58,60 @@ public class AlbumActivity extends AppCompatActivity {
                 dialog.setMessage("보호중입니다...");
                 dialog.show();
 
-                // 얼굴 및 포즈 감지 및 블러링 처리
+                // 포즈 감지 및 블러링 처리
                 executor.execute(() -> {
                     try {
-                        // 얼굴 및 포즈 감지
                         List<Face> faces = ImageProcessor.processInputImage(photoBitmap, AlbumActivity.this).get();
                         Pose pose = ImageProcessor.processInputImagePose(photoBitmap, AlbumActivity.this).get();
 
                         Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
 
-                        // 동공 블러링 활성화 및 얼굴이 감지된 경우
-                        boolean isIrisBlurringOn = true;  // 이 부분을 조건에 맞게 설정해주세요
-                        if (isIrisBlurringOn && faces.size() > 0) {
-                            // 얼굴 블러 처리
+                        // 얼굴 블러 처리 (눈 중심)
+                        if (FingerMainActivity.isIrisBlurringOn) {
                             for (Face face : faces) {
-                                // 눈 블러 처리
-                                float eyeRadius = face.getBoundingBox().width() * 0.03f;
+                                float eyeRadius = face.getBoundingBox().width() * 0.03f;  // 얼굴 크기에 따른 반경 설정
+
                                 FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
                                 if (leftEye != null) {
                                     PointF leftEyePos = leftEye.getPosition();
-                                    Rect leftEyeRect = new Rect(
-                                            (int) (leftEyePos.x - eyeRadius),
-                                            (int) (leftEyePos.y - eyeRadius),
-                                            (int) (leftEyePos.x + eyeRadius),
-                                            (int) (leftEyePos.y + eyeRadius)
-                                    );
-                                    blurredBitmap = BitmapUtil.blurRegion(AlbumActivity.this, blurredBitmap, leftEyeRect);
+
+                                    blurredBitmap = BitmapUtil.blurCircularRegion(AlbumActivity.this, blurredBitmap, leftEyePos.x, leftEyePos.y, eyeRadius);
                                 }
 
-                                // 오른쪽 눈도 동일한 방식으로 처리
                                 FaceLandmark rightEye = face.getLandmark(FaceLandmark.RIGHT_EYE);
                                 if (rightEye != null) {
                                     PointF rightEyePos = rightEye.getPosition();
-                                    Rect rightEyeRect = new Rect(
-                                            (int) (rightEyePos.x - eyeRadius),
-                                            (int) (rightEyePos.y - eyeRadius),
-                                            (int) (rightEyePos.x + eyeRadius),
-                                            (int) (rightEyePos.y + eyeRadius)
-                                    );
-                                    blurredBitmap = BitmapUtil.blurRegion(AlbumActivity.this, blurredBitmap, rightEyeRect);
+
+                                    blurredBitmap = BitmapUtil.blurCircularRegion(AlbumActivity.this, blurredBitmap, rightEyePos.x, rightEyePos.y, eyeRadius);
                                 }
                             }
                         }
 
-                        // 포즈 처리 로직은 기존 방식 유지 (생략 가능)
-                        Bitmap faceAndPoseBlurredBitmap = applyPoseBlur(blurredBitmap, pose);
+                        if(FingerMainActivity.isFingerprintBlurringOn){
+                            PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
+                            PoseLandmark leftIndex = pose.getPoseLandmark(PoseLandmark.LEFT_INDEX);
+                            PoseLandmark rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
+                            PoseLandmark rightIndex = pose.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
+
+// 왼손 사각형 영역 블러 처리
+                            if (leftWrist != null && leftIndex != null) {
+                                Rect leftHandRect = getHandRectRegion(leftWrist, leftIndex);
+                                PointF leftIndexPos = leftIndex.getPosition();
+                                blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, leftHandRect, leftIndexPos);
+                            }
+
+// 오른손 사각형 영역 블러 처리
+                            if (rightWrist != null && rightIndex != null) {
+                                Rect rightHandRect = getHandRectRegion(rightWrist, rightIndex);
+                                PointF rightIndexPos = rightIndex.getPosition();
+                                blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, rightHandRect, rightIndexPos);
+                            }
+                        }
 
                         // UI 업데이트
+                        Bitmap finalBlurredBitmap = blurredBitmap;
                         runOnUiThread(() -> {
-                            imageView.setImageBitmap(faceAndPoseBlurredBitmap);
+                            imageView.setImageBitmap(finalBlurredBitmap);
                             dialog.dismiss();
                             Toast.makeText(AlbumActivity.this, "변환이 완료되었습니다:)", Toast.LENGTH_SHORT).show();
                         });
@@ -137,78 +142,9 @@ public class AlbumActivity extends AppCompatActivity {
         }
     }
 
-    // 얼굴 블러 처리 메서드
-    private Bitmap applyFaceBlur(Bitmap bitmap, List<Face> faces) {
-        Bitmap blurredBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-
-        // 얼굴 목록 순회하며 블러 처리
-        for (Face face : faces) {
-            // 왼쪽 눈의 좌표 확인 및 로그 출력
-            if (face.getLandmark(FaceLandmark.LEFT_EYE) != null) {
-                PointF leftEyePos = face.getLandmark(FaceLandmark.LEFT_EYE).getPosition();
-                Log.d("FaceDetection", "Left eye position: " + leftEyePos);  // 디버깅을 위한 로그
-                Rect leftEyeRect = new Rect((int) (leftEyePos.x - 20), (int) (leftEyePos.y - 20),
-                        (int) (leftEyePos.x + 20), (int) (leftEyePos.y + 20));
-                blurredBitmap = BitmapUtil.blurRegion(this, blurredBitmap, leftEyeRect);
-            }
-
-            // 오른쪽 눈의 좌표 확인 및 로그 출력
-            if (face.getLandmark(FaceLandmark.RIGHT_EYE) != null) {
-                PointF rightEyePos = face.getLandmark(FaceLandmark.RIGHT_EYE).getPosition();
-                Log.d("FaceDetection", "Right eye position: " + rightEyePos);  // 디버깅을 위한 로그
-                Rect rightEyeRect = new Rect((int) (rightEyePos.x - 20), (int) (rightEyePos.y - 20),
-                        (int) (rightEyePos.x + 20), (int) (rightEyePos.y + 20));
-                blurredBitmap = BitmapUtil.blurRegion(this, blurredBitmap, rightEyeRect);
-            }
-        }
-
-        return blurredBitmap;  // 블러 처리된 비트맵 반환
-    }
-
-    // 포즈 블러 처리 메서드
-    private Bitmap applyPoseBlur(Bitmap bitmap, Pose pose) {
-        Bitmap blurredBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-
-        // 포즈 랜드마크에 블러 처리
-        PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
-        PoseLandmark rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
-        PoseLandmark leftIndex = pose.getPoseLandmark(PoseLandmark.LEFT_INDEX);
-        PoseLandmark rightIndex = pose.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
-
-        if (leftWrist != null && leftIndex != null) {
-            Log.d("PoseDetection", "Left wrist position: " + leftWrist.getPosition());
-            Log.d("PoseDetection", "Left index position: " + leftIndex.getPosition());
-
-            Rect leftWristRect = new Rect((int) leftWrist.getPosition().x - 50, (int) leftWrist.getPosition().y - 50,
-                    (int) leftWrist.getPosition().x + 50, (int) leftWrist.getPosition().y + 50);
-            Rect leftIndexRect = new Rect((int) leftIndex.getPosition().x - 50, (int) leftIndex.getPosition().y - 50,
-                    (int) leftIndex.getPosition().x + 50, (int) leftIndex.getPosition().y + 50);
-
-            blurredBitmap = BitmapUtil.blurRegion(this, blurredBitmap, leftWristRect);
-            blurredBitmap = BitmapUtil.blurRegion(this, blurredBitmap, leftIndexRect);
-        } else {
-            Log.d("PoseDetection", "Left wrist or left index not detected.");
-        }
-
-        if (rightWrist != null && rightIndex != null) {
-            Log.d("PoseDetection", "Right wrist position: " + rightWrist.getPosition());
-            Log.d("PoseDetection", "Right index position: " + rightIndex.getPosition());
-
-            Rect rightWristRect = new Rect((int) rightWrist.getPosition().x - 50, (int) rightWrist.getPosition().y - 50,
-                    (int) rightWrist.getPosition().x + 50, (int) rightWrist.getPosition().y + 50);
-            Rect rightIndexRect = new Rect((int) rightIndex.getPosition().x - 50, (int) rightIndex.getPosition().y - 50,
-                    (int) rightIndex.getPosition().x + 50, (int) rightIndex.getPosition().y + 50);
-
-            blurredBitmap = BitmapUtil.blurRegion(this, blurredBitmap, rightWristRect);
-            blurredBitmap = BitmapUtil.blurRegion(this, blurredBitmap, rightIndexRect);
-        } else {
-            Log.d("PoseDetection", "Right wrist or right index not detected.");
-        }
-
-        return blurredBitmap;
-    }
 
 
+    // 이미지를 URI에서 비트맵으로 변환하는 메서드
     private Bitmap getBitmapFromUri(Uri uri) {
         try {
             ParcelFileDescriptor parcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r");
@@ -221,4 +157,32 @@ public class AlbumActivity extends AppCompatActivity {
         }
         return null;
     }
+
+    private Rect getHandRectRegion(PoseLandmark wrist, PoseLandmark index) {
+        // 손목에서 검지까지의 거리 계산
+        float distance = (float) Math.sqrt(
+                Math.pow(index.getPosition().x - wrist.getPosition().x, 2) +
+                        Math.pow(index.getPosition().y - wrist.getPosition().y, 2)
+        );
+
+        // 검지 좌표를 사각형의 중심으로 설정
+        float centerX = index.getPosition().x;
+        float centerY = index.getPosition().y;
+
+        // 거리의 3배를 한 변으로 하는 사각형 계산
+        float halfSide = (float) (distance * 1.5); // 손목까지의 거리의 2배가 한 변이므로, halfSide는 거리 그대로 사용
+
+        // 사각형의 좌상단과 우하단 좌표 계산
+        float left = centerX - halfSide;
+        float top = centerY - halfSide;
+        float right = centerX + halfSide;
+        float bottom = centerY + halfSide;
+
+        // 정사각형 Rect 반환
+        return new Rect((int)left, (int)top, (int)right, (int)bottom);
+    }
+
+
 }
+
+
