@@ -34,8 +34,8 @@ public class FingerMainActivity extends AppCompatActivity {
         }
     };
 
-    private boolean isIrisBlurringOn = true;
-    private boolean isFingerprintBlurringOn = false;
+     public static boolean isIrisBlurringOn = true;
+     public static boolean isFingerprintBlurringOn = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
