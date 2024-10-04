@@ -57,7 +57,7 @@ public class BitmapUtil {
                 if (Math.abs(pixelHsv[0] - wristHsv[0]) <= hueRange &&
                         Math.abs(pixelHsv[1] - wristHsv[1]) <= saturationRange &&
                         Math.abs(pixelHsv[2] - wristHsv[2]) <= valueRange){
-                    applyBlurHand(bitmap, blurredBitmap, x, y, 5); // 블러 반경 적용
+                    applyBlurHand(bitmap, blurredBitmap, x, y, 10); // 블러 반경 적용
                 }
 
             }
@@ -87,14 +87,14 @@ public class BitmapUtil {
         }
 
         if (count > 0) {
-//            r /= count;
-//            g /=count;
-//            b /=count;
+            r /= count;
+            g /=count;
+            b /=count;
 
             //테스트용-빨간색
-            r = 255;
-            g =1;
-            b =1;
+//            r = 255;
+//            g =1;
+//            b =1;
             blurred.setPixel(x, y, Color.rgb(r, g, b));
         }
     }
@@ -119,14 +119,14 @@ public class BitmapUtil {
         }
 
         if (count > 0) {
-//            r /= count;
-//            g /=count;
-//            b /=count;
+            r /= count;
+            g /=count;
+            b /=count;
 
             //테스트용-빨간색
-            r = 255;
-            g =1;
-            b =1;
+//            r = 255;
+//            g =1;
+//            b =1;
             blurred.setPixel(x, y, Color.rgb(r, g, b));
         }
     }
