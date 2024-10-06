@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="top">
+    android:gravity="top"
+    >
 
     <!-- TextView, 전체 너비를 맞추고 고정된 높이를 갖습니다. -->
 
@@ -13,9 +14,10 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:background="#FFCDD2">
+        android:background="#467bff">
 
         <!-- LinearLayout for Before section -->
+
         <TextView
             android:id="@+id/afterDescription"
             android:layout_width="wrap_content"
@@ -23,9 +25,10 @@
             android:layout_below="@id/afterSection"
             android:layout_centerHorizontal="true"
             android:layout_gravity="center_horizontal"
+            android:layout_marginStart="50dp"
             android:layout_marginTop="20dp"
-            android:text="티 안 나게 소중한 바이오 정보만 블러링!"
-            android:textColor="@color/design_default_color_error"
+            android:text="STEP1. 원하는 블러링 형식 선택!"
+            android:textColor="@color/white"
             android:textSize="23sp" />
 
         <LinearLayout
@@ -35,27 +38,7 @@
             android:orientation="vertical"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:layout_marginStart="60dp">
-
-            <TextView
-                android:id="@+id/before"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Before"
-
-                android:textColor="#000000"
-                android:textSize="30sp" />
-
-            <ImageView
-                android:id="@+id/beforeImage"
-                android:layout_width="90dp"
-                android:layout_height="150dp"
-                android:layout_marginTop="10dp"
-                android:src="@drawable/people" />
-
-
-
-        </LinearLayout>
+            android:layout_marginStart="60dp"/>
 
         <!-- LinearLayout for After section -->
         <LinearLayout
@@ -65,32 +48,18 @@
             android:orientation="vertical"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="60dp">
-
-            <TextView
-                android:id="@+id/after"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="After"
-                android:paddingLeft="10dp"
-                android:textColor="#000000"
-                android:textSize="30sp" />
-
-            <ImageView
-                android:id="@+id/afterImage"
-                android:layout_width="90dp"
-                android:layout_height="150dp"
-                android:layout_marginTop="10dp"
-                android:src="@drawable/people" />
-        </LinearLayout>
+            android:layout_marginEnd="60dp"/>
 
         <!-- Center LinearLayout to hold the center text and image -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_centerInParent="true"
-            android:gravity="center">
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="148dp"
+            android:layout_marginEnd="205dp"
+            android:gravity="center"
+            android:orientation="vertical">
 
 
         </LinearLayout>
