@@ -31,10 +31,24 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/afterSection"
-            android:layout_centerHorizontal="true"
+            android:layout_alignParentStart="true"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp"
-            android:text="블러링을 원한다면 on->off로!"
+            android:layout_marginStart="71dp"
+            android:layout_marginTop="-10dp"
+            android:text="모두 블러링을 하고싶다면??"
+            android:textColor="@color/design_default_color_error"
+            android:textSize="23sp" />
+
+        <TextView
+            android:id="@+id/afterDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/afterSection"
+            android:layout_alignParentEnd="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="32dp"
+            android:layout_marginEnd="142dp"
+            android:text="ON -> OFF로!"
             android:textColor="@color/design_default_color_error"
             android:textSize="23sp" />
 

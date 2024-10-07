@@ -16,6 +16,7 @@
         android:background="#FFCDD2">
 
         <!-- LinearLayout for Before section -->
+
         <ImageView
             android:id="@+id/smu_logo"
             android:layout_width="60dp"
@@ -26,15 +27,55 @@
             android:scaleType="fitCenter"
             android:src="@drawable/smu_logo" />
 
+        <ImageView
+            android:id="@+id/sumungi_2_image"
+            android:layout_width="239dp"
+            android:layout_height="238dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="172dp"
+            android:layout_marginBottom="72dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/sumungi_2" />
+
         <TextView
             android:id="@+id/afterDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/afterSection"
-            android:layout_centerHorizontal="true"
+            android:layout_alignParentStart="true"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="20dp"
-            android:text="티 안 나게 소중한 바이오 정보만 블러링!"
+            android:layout_marginStart="3dp"
+            android:layout_marginTop="177dp"
+            android:text="사진 블러링 시작하기"
+            android:textColor="@color/design_default_color_error"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/afterDescription"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/afterSection"
+            android:layout_alignParentStart="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="257dp"
+            android:layout_marginTop="-112dp"
+            android:text="보안 강화"
+            android:textColor="@color/design_default_color_error"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/afterDescription"
+            android:layout_width="169dp"
+            android:layout_height="79dp"
+            android:layout_below="@id/afterSection"
+            android:layout_alignParentStart="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="222dp"
+            android:layout_marginTop="-2dp"
+            android:text="한번 더 안전하게 보호하기!"
+            android:textAlignment="center"
             android:textColor="@color/design_default_color_error"
             android:textSize="23sp" />
 
@@ -45,27 +86,7 @@
             android:orientation="vertical"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:layout_marginStart="60dp">
-
-            <TextView
-                android:id="@+id/before"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Before"
-
-                android:textColor="#000000"
-                android:textSize="30sp" />
-
-            <ImageView
-                android:id="@+id/beforeImage"
-                android:layout_width="90dp"
-                android:layout_height="150dp"
-                android:layout_marginTop="10dp"
-                android:src="@drawable/people" />
-
-
-
-        </LinearLayout>
+            android:layout_marginStart="60dp"/>
 
         <!-- LinearLayout for After section -->
         <LinearLayout
@@ -75,24 +96,7 @@
             android:orientation="vertical"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="60dp">
-
-            <TextView
-                android:id="@+id/after"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="After"
-                android:paddingLeft="10dp"
-                android:textColor="#000000"
-                android:textSize="30sp" />
-
-            <ImageView
-                android:id="@+id/afterImage"
-                android:layout_width="90dp"
-                android:layout_height="150dp"
-                android:layout_marginTop="10dp"
-                android:src="@drawable/people" />
-        </LinearLayout>
+            android:layout_marginEnd="60dp"/>
 
         <!-- Center LinearLayout to hold the center text and image -->
         <LinearLayout
@@ -104,6 +108,29 @@
 
 
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/eye_icon_1"
+            android:layout_width="79dp"
+            android:layout_height="46dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="116dp"
+            android:layout_marginBottom="221dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/eye_icon" />
+
+        <ImageView
+            android:id="@+id/hand_icon_1"
+            android:layout_width="79dp"
+            android:layout_height="46dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="23dp"
+            android:layout_marginBottom="221dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/hand_icon" />
+
     </RelativeLayout>
 
     <View
