@@ -1,84 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="top">
 
-    <!-- TextView, 전체 너비를 맞추고 고정된 높이를 갖습니다. -->
-
-
-    <!-- Spacer View, 남은 공간을 차지하고 버튼들을 밀어내려 하단에 위치시킵니다. -->
+    <!-- 핑크색 배경 영역 -->
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:background="#467bff">
+        android:background="#FFCDD2">
 
-        <!-- LinearLayout for Before section -->
+        <!-- 상명대학교 로고 이미지 뷰 -->
 
         <TextView
-            android:id="@+id/afterDescription"
+            android:id="@+id/before"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/afterSection"
-            android:layout_alignParentEnd="true"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="114dp"
-            android:layout_marginEnd="18dp"
-            android:text="티 안 나게 소중한 바이오 정보만 블러링!"
-            android:textColor="@color/white"
-            android:textSize="23sp" />
-
-        <LinearLayout
-            android:id="@+id/beforeSection"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_alignParentStart="true"
-            android:layout_centerVertical="true"
-            android:layout_marginStart="60dp"/>
 
-        <!-- LinearLayout for After section -->
-        <LinearLayout
-            android:id="@+id/afterSection"
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="86dp"
+            android:layout_marginBottom="144dp"
+            android:text="Before"
+            android:textColor="#000000"
+            android:textSize="20sp" />
+
+        <TextView
+            android:id="@+id/before"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            android:layout_marginEnd="60dp"/>
+            android:layout_alignParentStart="true"
 
-        <!-- Center LinearLayout to hold the center text and image -->
+            android:layout_alignParentBottom="true"
+            android:layout_marginStart="268dp"
+            android:layout_marginBottom="144dp"
+            android:text="After"
+            android:textColor="#000000"
+            android:textSize="20sp" />
 
         <ImageView
-            android:id="@+id/imageView2"
-            android:layout_width="200dp"
-            android:layout_height="235dp"
+            android:id="@+id/smu_logo"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_margin="16dp"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="80dp"
-            android:layout_marginTop="30dp"
-            android:layout_marginEnd="80dp"
-            android:layout_marginBottom="114dp"
-            app:srcCompat="@drawable/sumung" />
+            android:src="@drawable/smu_logo"
+            android:scaleType="fitCenter" />
 
+        <!-- 눈모양 아이콘을 담을 레이아웃 -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_centerInParent="true"
-            android:gravity="center">
+            android:orientation="horizontal"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="40dp">
 
+            <!-- 눈 모양 아이콘 1 -->
 
+            <!-- 눈 모양 아이콘 2 -->
         </LinearLayout>
 
+        <!-- 수뭉이 이미지 뷰 -->
+        <ImageView
+            android:id="@+id/sumungi_image"
+            android:layout_width="194dp"
+            android:layout_height="214dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="105dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/sumungi" />
 
+        <!-- 문구 추가 -->
+        <TextView
+            android:id="@+id/blur_text"
+            android:layout_width="386dp"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/sumungi_image"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="88dp"
+            android:layout_marginEnd="9dp"
+            android:text="티 안나게 소중한 바이오 정보만 블러링!"
+            android:textAlignment="center"
+            android:textColor="@color/design_default_color_error"
+            android:textSize="23sp" />
+
+        <ImageView
+            android:id="@+id/eye_icon_1"
+            android:layout_width="79dp"
+            android:layout_height="46dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="253dp"
+            android:layout_marginBottom="93dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/eye_icon" />
+
+        <ImageView
+            android:id="@+id/eye_icon_2"
+            android:layout_width="79dp"
+            android:layout_height="46dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="81dp"
+            android:layout_marginBottom="93dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/eye_icon_2" />
     </RelativeLayout>
 
+    <!-- View Spacer -->
     <View
         android:layout_width="match_parent"
         android:layout_height="10dp"
@@ -89,7 +122,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <android.widget.Button
+        <Button
             android:id="@+id/button4"
             android:layout_width="120dp"
             android:layout_height="120dp"
@@ -101,7 +134,7 @@
             android:textColor="#FBF7F7"
             android:textSize="20sp" />
 
-        <android.widget.Button
+        <Button
             android:id="@+id/button3"
             android:layout_width="120dp"
             android:layout_height="120dp"
@@ -113,8 +146,8 @@
             android:textSize="20sp"/>
     </RelativeLayout>
 
-
-    <android.widget.Button
+    <!-- 카메라 버튼 -->
+    <Button
         android:id="@+id/button2"
         android:layout_width="match_parent"
         android:layout_height="90dp"
@@ -123,9 +156,8 @@
         android:textColor="#FBF7F7"
         android:textSize="24sp" />
 
-    <!-- 앨범 버튼, 카메라 버튼 바로 아래에 위치합니다. -->
-    <android.widget.Button
-
+    <!-- 앨범 버튼 -->
+    <Button
         android:id="@+id/button"
         android:layout_width="match_parent"
         android:layout_height="90dp"
@@ -134,5 +166,4 @@
         android:layout_marginTop="20dp"
         android:textSize="24sp"
         android:background="@drawable/rounded_button_grey"/>
-
 </LinearLayout>
