@@ -13,22 +13,26 @@
         android:background="#FBF6F6"
         android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/protecting_info"
-            android:layout_width="match_parent"
-            android:layout_height="42dp"
-            android:text="인터넷 세상에서 당신의 정보를 보호중!"
-            android:textAlignment="center"
-            android:textColor="#467bff"
-            android:textSize="18sp" />
 
-        <ProgressBar
-            android:id="@+id/progress_bar_2"
-            android:layout_width="wrap_content"
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="16dp"
-            android:indeterminate="true"
-            android:theme="@style/Widget.AppCompat.ProgressBar.Horizontal" />
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@android:color/white">
+
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminate="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="로딩중..."
+                android:textSize="20sp"
+                android:layout_marginTop="20dp" />
+        </LinearLayout>
     </LinearLayout>
 
 </RelativeLayout>

@@ -10,20 +10,16 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
-import android.graphics.PointF;
-import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.*;
-import android.hardware.camera2.params.Face;
 import android.media.Image;
 import android.media.ImageReader;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 import android.view.TextureView;
@@ -41,6 +37,7 @@ import androidx.core.app.ActivityCompat;
 //import com.google.mlkit.vision.face.Face;
 //import com.google.mlkit.vision.face.FaceLandmark;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -122,7 +119,9 @@ public class MainActivity extends AppCompatActivity {
             isCameraOpenRequested = true; // 권한 요청 후 카메라 열기를 요청
         }
 
-        takePictureButton.setOnClickListener(v -> takePicture());
+        takePictureButton.setOnClickListener(v -> {
+            takePicture();
+        });
 
         albumButton.setOnClickListener(v -> {
             Intent intent = new Intent(getApplicationContext(), AlbumActivity.class);
@@ -163,20 +162,46 @@ public class MainActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, PERMISSIONS_REQUEST_CODE);
                 return;
             }
-            manager.openCamera(cameraId, stateCallback, null);
+            manager.openCamera(cameraId, new CameraDevice.StateCallback() {
+                @Override
+                public void onOpened(@NonNull CameraDevice camera) {
+                    cameraDevice = camera; // cameraDevice를 여기서 초기화
+                    createCameraPreview(); // 카메라가 열린 후 미리보기 생성
+                }
+
+                @Override
+                public void onDisconnected(@NonNull CameraDevice camera) {
+                    camera.close(); // 카메라가 끊어지면 닫기
+                    cameraDevice = null;
+                }
+
+                @Override
+                public void onError(@NonNull CameraDevice camera, int error) {
+                    camera.close(); // 오류 발생 시 닫기
+                    cameraDevice = null;
+                }
+            }, null);
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
     }
 
     private void createCameraPreview() {
+        if (cameraDevice == null) {
+            // cameraDevice가 null인 경우 로그를 추가하여 원인을 파악
+            Log.e("MainActivity", "cameraDevice is null, unable to create camera preview");
+            return;
+        }
+
         try {
             SurfaceTexture texture = textureView.getSurfaceTexture();
             assert texture != null;
             texture.setDefaultBufferSize(1920, 1080);
             Surface surface = new Surface(texture);
+
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             captureRequestBuilder.addTarget(surface);
+
             cameraDevice.createCaptureSession(Collections.singletonList(surface), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession session) {
@@ -193,6 +218,11 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    ////////////
+    //////////
+
+    /////////////
 
     private void updatePreview() {
         if (cameraDevice == null) return;
@@ -216,6 +246,11 @@ public class MainActivity extends AppCompatActivity {
         closeCameraSession();
     }
 
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        closeCameraSession();
+        return true;  // Surface가 파괴되었음을 알림
+    }
+
     private void closeCameraSession() {
         if (cameraCaptureSession != null) {
             cameraCaptureSession.close();
@@ -229,6 +264,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void takePicture() {
         if (cameraDevice == null) return;
+
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try {
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(cameraDevice.getId());
@@ -249,6 +285,7 @@ public class MainActivity extends AppCompatActivity {
             final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
             captureBuilder.addTarget(reader.getSurface());
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, getJpegOrientation(characteristics));
 
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.DISPLAY_NAME, System.currentTimeMillis() + ".jpg");
@@ -259,25 +296,36 @@ public class MainActivity extends AppCompatActivity {
 
             ImageReader.OnImageAvailableListener readerListener = reader1 -> {
                 Image image = reader1.acquireLatestImage();
-                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                byte[] bytes = new byte[buffer.capacity()];
-                buffer.get(bytes);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                if (image != null) {
+                    ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                    byte[] bytes = new byte[buffer.remaining()];
+                    buffer.get(bytes);
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    int facing = characteristics.get(CameraCharacteristics.LENS_FACING);
+                    Bitmap processedBitmap;
+                    if (facing == CameraCharacteristics.LENS_FACING_FRONT) {
+                        processedBitmap = flipImageVertically(bitmap); // 전면 카메라의 경우 좌우 반전
+                    } else {
+                        processedBitmap = bitmap;
+                    }
 
-                int facing = characteristics.get(CameraCharacteristics.LENS_FACING);
-                Bitmap rotatedBitmap = rotateImage(bitmap, facing == CameraCharacteristics.LENS_FACING_FRONT ? -90 : 90);
+                    Bitmap rotatedBitmap = rotateImage(processedBitmap, facing == CameraCharacteristics.LENS_FACING_FRONT ? -90 : 90);
 
-                saveImage(rotatedBitmap, imageUri);
-                image.close();
+                    Uri bitmapUri = saveBitmapToFile(rotatedBitmap);
+                    if (bitmapUri != null) {
+                        Intent intent = new Intent(MainActivity.this, Camera_picture.class);
+                        intent.putExtra("photoUri", bitmapUri.toString());
+                        startActivity(intent); // 파일 URI를 넘기고 화면 전환
+                    }
+                    image.close();
+                }
             };
-
             reader.setOnImageAvailableListener(readerListener, null);
 
             CameraCaptureSession.CaptureCallback captureListener = new CameraCaptureSession.CaptureCallback() {
                 @Override
                 public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
                     super.onCaptureCompleted(session, request, result);
-                    Toast.makeText(MainActivity.this, "사진 저장됨: " + imageUri.toString(), Toast.LENGTH_SHORT).show();
                     createCameraPreview();
                 }
             };
@@ -301,19 +349,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private Bitmap flipImageVertically(Bitmap bitmap) {
+        Matrix matrix = new Matrix();
+        matrix.preScale(1.0f, -1.0f);  // Y축 반전으로 상하 반전
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+    private Uri saveImage(Bitmap bitmap, Uri imageUri) {
+        try (OutputStream out = getContentResolver().openOutputStream(imageUri)) {
+            if (out != null) {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                out.flush(); // 버퍼를 비워줍니다.
+                return imageUri; // 저장한 파일의 URI를 반환합니다.
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null; // 오류 발생 시 null을 반환합니다.
+    }
+
+    private Uri saveBitmapToFile(Bitmap bitmap) {
+        String filename = "tempImage.jpg";
+        File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), filename);
+
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            return Uri.fromFile(file); // 파일 URI 반환
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null; // 오류 발생 시 null 반환
+        }
+    }
+
+
     private Bitmap rotateImage(Bitmap img, int degree) {
         Matrix matrix = new Matrix();
         matrix.postRotate(degree);
         return Bitmap.createBitmap(img, 0, 0, img.getWidth(), img.getHeight(), matrix, true);
     }
 
-    private void saveImage(Bitmap bitmap, Uri imageUri) {
-        try (OutputStream out = getContentResolver().openOutputStream(imageUri)) {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+
 
 //    private Bitmap applyBlur(Bitmap bitmap, List<Face> faces) {
 //        return bitmap;  // 여기에서 얼굴 영역 블러 처리 로직 추가
@@ -323,6 +397,22 @@ public class MainActivity extends AppCompatActivity {
 //        Toast.makeText(this, "카메라 오류가 발생했습니다: " + e.getMessage(), Toast.LENGTH_SHORT).show();
 //    }
 
+    private int getJpegOrientation(CameraCharacteristics characteristics) {
+        int rotation = getWindowManager().getDefaultDisplay().getRotation();
+        int sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION);
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                return sensorOrientation;
+            case Surface.ROTATION_90:
+                return (sensorOrientation + 90) % 360;
+            case Surface.ROTATION_180:
+                return (sensorOrientation + 180) % 360;
+            case Surface.ROTATION_270:
+                return (sensorOrientation + 270) % 360;
+            default:
+                return sensorOrientation;
+        }
+    }
     private void switchCamera() {
         rearCameraIndex++;
         cameraMode = rearCameraIndex % cameraIds.length;

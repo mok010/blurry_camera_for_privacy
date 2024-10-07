@@ -10,7 +10,7 @@ public class TransitionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_transition);
+        setContentView(R.layout.activity_main4);
 
         // 2초 후에 다음 액티비티로 이동
         new Handler().postDelayed(new Runnable() {

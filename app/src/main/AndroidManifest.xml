@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
 
     <uses-feature android:name="android.hardware.camera" />
 
@@ -19,9 +21,19 @@
         android:theme="@style/Theme.New_camera"
         tools:targetApi="31" >
 
+        <activity android:name=".SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".AlbumActivity"
             android:exported="false" />
+        <activity
+            android:name=".Camera_picture"
+            android:exported="false"/>
         <activity
             android:name=".MainActivity1"
             android:exported="false" />
@@ -46,10 +58,6 @@
         <activity
             android:name=".LoadingActivity"
             android:exported="true" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 
