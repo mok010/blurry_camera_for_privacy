@@ -15,14 +15,27 @@
         <!-- 상명대학교 로고 이미지 뷰 -->
 
         <TextView
+            android:id="@+id/blur_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/sumungi_image"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="143dp"
+            android:layout_marginEnd="294dp"
+            android:text="지문 블러링 사용하기"
+            android:textAlignment="center"
+            android:textColor="@color/design_default_color_error"
+            android:textSize="13sp" />
+
+        <TextView
             android:id="@+id/before"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
 
             android:layout_alignParentBottom="true"
-            android:layout_marginStart="86dp"
-            android:layout_marginBottom="144dp"
+            android:layout_marginStart="90dp"
+            android:layout_marginBottom="147dp"
             android:text="Before"
             android:textColor="#000000"
             android:textSize="20sp" />
@@ -83,7 +96,7 @@
             android:layout_alignParentEnd="true"
             android:layout_marginTop="88dp"
             android:layout_marginEnd="9dp"
-            android:text="티 안나게 소중한 바이오 정보만 블러링!"
+            android:text="지문 블러링으로 내 정보를 보호하기!"
             android:textAlignment="center"
             android:textColor="@color/design_default_color_error"
             android:textSize="23sp" />
