@@ -13,7 +13,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:background="#FFCDD2">
+        android:background="#2196F3">
 
         <!-- LinearLayout for Before section -->
 
@@ -48,25 +48,25 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginStart="3dp"
             android:layout_marginTop="177dp"
-            android:text="사진 블러링 시작하기"
-            android:textColor="@color/design_default_color_error"
+            android:text="사진 블러링 사용하기"
+            android:textColor="@color/white"
             android:textSize="13sp" />
 
         <TextView
-            android:id="@+id/afterDescription3"
+            android:id="@+id/afterDescription"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/afterSection"
             android:layout_alignParentStart="true"
             android:layout_gravity="center_horizontal"
-            android:layout_marginStart="257dp"
-            android:layout_marginTop="-112dp"
+            android:layout_marginStart="263dp"
+            android:layout_marginTop="-113dp"
             android:text="보안 강화"
-            android:textColor="@color/design_default_color_error"
+            android:textColor="@color/white"
             android:textSize="20sp" />
 
         <TextView
-            android:id="@+id/afterDescription2"
+            android:id="@+id/afterDescription"
             android:layout_width="169dp"
             android:layout_height="79dp"
             android:layout_below="@id/afterSection"
@@ -76,35 +76,35 @@
             android:layout_marginTop="-2dp"
             android:text="한번 더 안전하게 보호하기!"
             android:textAlignment="center"
-            android:textColor="@color/design_default_color_error"
+            android:textColor="@color/white"
             android:textSize="23sp" />
 
         <LinearLayout
             android:id="@+id/beforeSection"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:layout_marginStart="60dp"/>
+            android:layout_marginStart="60dp"
+            android:orientation="vertical" />
 
         <!-- LinearLayout for After section -->
         <LinearLayout
             android:id="@+id/afterSection"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="60dp"/>
+            android:layout_marginEnd="60dp"
+            android:orientation="vertical" />
 
         <!-- Center LinearLayout to hold the center text and image -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_centerInParent="true"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="vertical">
 
 
         </LinearLayout>

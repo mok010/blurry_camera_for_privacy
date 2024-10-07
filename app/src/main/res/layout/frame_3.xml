@@ -13,9 +13,10 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:background="#FFCDD2">
+        android:background="#971913D5">
 
         <!-- LinearLayout for Before section -->
+
         <ImageView
             android:id="@+id/smu_logo"
             android:layout_width="60dp"
@@ -26,95 +27,72 @@
             android:scaleType="fitCenter"
             android:src="@drawable/smu_logo" />
 
+        <!-- 이미지 비포에프터 뷰 -->
+
         <TextView
             android:id="@+id/afterDescription"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="174dp"
+            android:layout_height="78dp"
             android:layout_below="@id/afterSection"
             android:layout_alignParentStart="true"
             android:layout_gravity="center_horizontal"
-            android:layout_marginStart="71dp"
-            android:layout_marginTop="-10dp"
-            android:text="모두 블러링을 하고싶다면??"
-            android:textColor="@color/design_default_color_error"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="-63dp"
+            android:text=" 나의 사진에 맞는 블러링 확인하기"
+            android:textAlignment="center"
+            android:textColor="@color/white"
             android:textSize="23sp" />
 
         <TextView
-            android:id="@+id/afterDescription2"
-            android:layout_width="wrap_content"
+            android:id="@+id/afterDescription"
+            android:layout_width="143dp"
             android:layout_height="wrap_content"
             android:layout_below="@id/afterSection"
             android:layout_alignParentEnd="true"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="32dp"
-            android:layout_marginEnd="142dp"
-            android:text="ON -> OFF로!"
-            android:textColor="@color/design_default_color_error"
-            android:textSize="23sp" />
+            android:layout_marginTop="29dp"
+            android:layout_marginEnd="232dp"
+            android:text="OFF -> ON으로!"
+            android:textColor="@color/white"
+            android:textSize="20sp" />
 
         <LinearLayout
             android:id="@+id/beforeSection"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            android:layout_marginStart="60dp">
-
-            <TextView
-                android:id="@+id/before"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Before"
-
-                android:textColor="#000000"
-                android:textSize="30sp" />
-
-            <ImageView
-                android:id="@+id/beforeImage"
-                android:layout_width="90dp"
-                android:layout_height="150dp"
-                android:layout_marginTop="10dp"
-                android:src="@drawable/people" />
-
-
-
-        </LinearLayout>
+            android:layout_marginStart="60dp"
+            android:orientation="vertical" />
 
         <!-- LinearLayout for After section -->
+
+        <ImageView
+            android:id="@+id/blur1_image"
+            android:layout_width="180dp"
+            android:layout_height="321dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="17dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/blur1" />
+
         <LinearLayout
             android:id="@+id/afterSection"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"
-            android:layout_marginEnd="60dp">
-
-            <TextView
-                android:id="@+id/after"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="After"
-                android:paddingLeft="10dp"
-                android:textColor="#000000"
-                android:textSize="30sp" />
-
-            <ImageView
-                android:id="@+id/afterImage"
-                android:layout_width="90dp"
-                android:layout_height="150dp"
-                android:layout_marginTop="10dp"
-                android:src="@drawable/people" />
-        </LinearLayout>
+            android:layout_marginEnd="60dp"
+            android:orientation="vertical" />
 
         <!-- Center LinearLayout to hold the center text and image -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
             android:layout_centerInParent="true"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="vertical">
 
 
         </LinearLayout>

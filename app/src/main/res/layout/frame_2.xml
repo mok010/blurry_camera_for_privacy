@@ -10,7 +10,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="400dp"
-        android:background="#FFCDD2">
+        android:background="#E9A5FD">
 
         <!-- 상명대학교 로고 이미지 뷰 -->
 
@@ -18,13 +18,13 @@
             android:id="@+id/blur_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/sumungi_image"
+            android:layout_below="@id/sumung_image"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="143dp"
-            android:layout_marginEnd="294dp"
+            android:layout_marginEnd="296dp"
             android:text="지문 블러링 사용하기"
             android:textAlignment="center"
-            android:textColor="@color/design_default_color_error"
+            android:textColor="#F54E2519"
             android:textSize="13sp" />
 
         <TextView
@@ -41,7 +41,7 @@
             android:textSize="20sp" />
 
         <TextView
-            android:id="@+id/before2"
+            android:id="@+id/before"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
@@ -57,19 +57,19 @@
             android:id="@+id/smu_logo"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:layout_margin="16dp"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
-            android:src="@drawable/smu_logo"
-            android:scaleType="fitCenter" />
+            android:layout_margin="16dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/smu_logo" />
 
         <!-- 손모양 아이콘을 담을 레이아웃 -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="40dp">
+            android:layout_marginTop="40dp"
+            android:orientation="horizontal">
 
             <!-- 손 모양 아이콘 1 -->
 
@@ -77,28 +77,29 @@
         </LinearLayout>
 
         <!-- 수뭉이 이미지 뷰 -->
+
+        <!-- 문구 추가 -->
         <ImageView
-            android:id="@+id/sumungi_image"
+            android:id="@+id/sumung_image"
             android:layout_width="194dp"
             android:layout_height="214dp"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="20dp"
             android:layout_marginEnd="105dp"
             android:scaleType="fitCenter"
-            android:src="@drawable/sumungi" />
+            android:src="@drawable/sumung_2" />
 
-        <!-- 문구 추가 -->
         <TextView
-            android:id="@+id/blur_text2"
+            android:id="@+id/blur_text"
             android:layout_width="386dp"
             android:layout_height="wrap_content"
-            android:layout_below="@id/sumungi_image"
+            android:layout_below="@id/sumung_image"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="88dp"
-            android:layout_marginEnd="9dp"
+            android:layout_marginEnd="13dp"
             android:text="지문 블러링으로 내 정보를 보호하기!"
             android:textAlignment="center"
-            android:textColor="@color/design_default_color_error"
+            android:textColor="#F54E2519"
             android:textSize="23sp" />
 
         <ImageView

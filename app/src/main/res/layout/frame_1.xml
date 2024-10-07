@@ -28,7 +28,7 @@
             android:textSize="20sp" />
 
         <TextView
-            android:id="@+id/before2"
+            android:id="@+id/before"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
@@ -89,13 +89,13 @@
             android:textSize="23sp" />
 
         <TextView
-            android:id="@+id/blur_text2"
+            android:id="@+id/blur_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/sumungi_image"
             android:layout_alignParentEnd="true"
             android:layout_marginTop="143dp"
-            android:layout_marginEnd="294dp"
+            android:layout_marginEnd="295dp"
             android:text="홍채 블러링 사용하기"
             android:textAlignment="center"
             android:textColor="@color/design_default_color_error"
