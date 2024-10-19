@@ -24,10 +24,10 @@ import com.google.mlkit.vision.face.FaceLandmark;
 import com.google.mlkit.vision.pose.Pose;
 import com.google.mlkit.vision.pose.PoseLandmark;
 
+import java.io.File;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +36,7 @@ public class AlbumActivity extends AppCompatActivity {
 
     ImageView imageView;
     Bitmap photoBitmap;
+    Uri originalImageUri;  // 원본 이미지의 URI를 저장할 변수
     int image_Val = 0;
 
     @Override
@@ -47,7 +48,7 @@ public class AlbumActivity extends AppCompatActivity {
         button2.setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setType("image/*");
-            startActivityForResult(intent, 1);
+            startActivityForResult(intent, 1);  // 이미지를 선택할 때 ActivityResult 사용
         });
 
         imageView = findViewById(R.id.imageView);
@@ -89,17 +90,17 @@ public class AlbumActivity extends AppCompatActivity {
                             }
                         }
 
+                        // 손 블러 처리
                         if(FingerMainActivity.isFingerprintBlurringOn){
                             PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
                             PoseLandmark leftIndex = pose.getPoseLandmark(PoseLandmark.LEFT_INDEX);
                             PoseLandmark leftPinky = pose.getPoseLandmark(PoseLandmark.LEFT_PINKY);
 
-
                             PoseLandmark rightWrist = pose.getPoseLandmark(PoseLandmark.RIGHT_WRIST);
                             PoseLandmark rightIndex = pose.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
                             PoseLandmark rightPinky = pose.getPoseLandmark(PoseLandmark.RIGHT_PINKY);
 
-// 왼손 사각형 영역 블러 처리
+                            // 왼손 사각형 영역 블러 처리
                             if (leftWrist != null && leftIndex != null) {
                                 Rect leftHandRect = getHandRectRegion(leftWrist, leftIndex);
                                 PointF leftIndexPos = leftIndex.getPosition();
@@ -110,13 +111,13 @@ public class AlbumActivity extends AppCompatActivity {
                                 PointF leftPinkyPos = leftPinky.getPosition();
                                 blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, leftHandRect, leftPinkyPos);
                             }
-                            if(leftPinky != null&& leftIndex != null){
+                            if (leftPinky != null && leftIndex != null) {
                                 Rect leftHandRect = getHandRectRegion(leftPinky, leftIndex);
                                 PointF leftIndexPos = leftIndex.getPosition();
                                 blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, leftHandRect, leftIndexPos);
                             }
 
-// 오른손 사각형 영역 블러 처리
+                            // 오른손 사각형 영역 블러 처리
                             if (rightWrist != null && rightIndex != null) {
                                 Rect rightHandRect = getHandRectRegion(rightWrist, rightIndex);
                                 PointF rightIndexPos = rightIndex.getPosition();
@@ -127,7 +128,7 @@ public class AlbumActivity extends AppCompatActivity {
                                 PointF rightPinkyPos = rightPinky.getPosition();
                                 blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, rightHandRect, rightPinkyPos);
                             }
-                            if(rightPinky != null&& rightIndex != null){
+                            if (rightPinky != null && rightIndex != null) {
                                 Rect rightHandRect = getHandRectRegion(rightPinky, rightIndex);
                                 PointF rightIndexPos = rightIndex.getPosition();
                                 blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, rightHandRect, rightIndexPos);
@@ -135,7 +136,14 @@ public class AlbumActivity extends AppCompatActivity {
                         }
 
                         // 블러 처리 후 앨범에 저장
-                        saveImageToGallery(blurredBitmap);  // 블러 처리 후 이미지 저장
+                        Uri savedUri = saveImageToGallery(blurredBitmap);  // 블러 처리 후 이미지 저장
+
+                        if (savedUri != null) {
+                            // 블러 이미지 저장 성공 시 원본 이미지 삭제
+                            if (originalImageUri != null) {
+                                deleteTempFile(originalImageUri); // 원본 이미지 삭제
+                            }
+                        }
 
                         // UI 업데이트
                         Bitmap finalBlurredBitmap = blurredBitmap;
@@ -164,14 +172,13 @@ public class AlbumActivity extends AppCompatActivity {
 
         if (requestCode == 1 && resultCode == RESULT_OK) {
             Uri uri = data.getData();
+            originalImageUri = uri;  // 원본 이미지의 URI 저장 (삭제 용도로 사용)
             Log.d("이미지주소", String.valueOf(uri));
-            photoBitmap = getBitmapFromUri(uri);
+            photoBitmap = getBitmapFromUri(uri);  // 비트맵으로 변환
             imageView.setImageBitmap(photoBitmap);
             image_Val = 1;
         }
     }
-
-
 
     // 이미지를 URI에서 비트맵으로 변환하는 메서드
     private Bitmap getBitmapFromUri(Uri uri) {
@@ -187,8 +194,8 @@ public class AlbumActivity extends AppCompatActivity {
         return null;
     }
 
-    // 블러링된 이미지를 앨범에 저장하는 메서드 추가
-    private void saveImageToGallery(Bitmap bitmap) {
+    // 블러링된 이미지를 앨범에 저장하는 메서드
+    private Uri saveImageToGallery(Bitmap bitmap) {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Images.Media.DISPLAY_NAME, System.currentTimeMillis() + ".jpg");  // 파일명
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
@@ -199,9 +206,29 @@ public class AlbumActivity extends AppCompatActivity {
         try (OutputStream out = getContentResolver().openOutputStream(imageUri)) {
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);  // JPEG로 저장
             Toast.makeText(this, "이미지가 앨범에 저장되었습니다.", Toast.LENGTH_SHORT).show();
+            return imageUri; // 저장된 이미지의 URI 반환
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "이미지 저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
+            return null;
+        }
+    }
+
+    // 원본 이미지를 삭제하는 메서드
+    private void deleteTempFile(Uri fileUri) {
+        if (fileUri != null && "file".equals(fileUri.getScheme())) {
+            File file = new File(fileUri.getPath());
+            if (file.exists()) {
+                if (file.delete()) {
+                    Log.d("AlbumActivity", "임시 파일이 삭제되었습니다: " + fileUri.getPath());
+                } else {
+                    Log.e("AlbumActivity", "임시 파일 삭제 실패: " + fileUri.getPath());
+                }
+            } else {
+                Log.e("AlbumActivity", "파일이 존재하지 않습니다: " + fileUri.getPath());
+            }
+        } else {
+            Log.e("AlbumActivity", "삭제할 파일 경로가 올바르지 않습니다: " + fileUri);
         }
     }
 
@@ -229,6 +256,3 @@ public class AlbumActivity extends AppCompatActivity {
         return new Rect((int)left, (int)top, (int)right, (int)bottom);
     }
 }
-
-
-
