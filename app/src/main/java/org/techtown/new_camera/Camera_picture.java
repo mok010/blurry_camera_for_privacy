@@ -50,6 +50,21 @@ public class Camera_picture extends AppCompatActivity {
         imageView = findViewById(R.id.imageView);
         Button button3 = findViewById(R.id.button3);
         Button button = findViewById(R.id.button);
+        Button saveImageButton = findViewById(R.id.saveImageButton);
+        saveImageButton.setOnClickListener(view -> {
+            if (photoBitmap != null) {
+                boolean isSaved = saveImageToGallery(photoBitmap); // 블러링 없이 저장
+                if (isSaved) {
+                    Toast.makeText(Camera_picture.this, "이미지가 갤러리에 저장되었습니다.", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(Camera_picture.this, "이미지 저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                Toast.makeText(Camera_picture.this, "저장할 이미지가 없습니다.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
 
         Toast.makeText(this,
                 "홍채 블러링: " + (FingerMainActivity.isIrisBlurringOn ? "ON" : "OFF") +

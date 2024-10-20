@@ -60,6 +60,7 @@ public class AlbumActivity extends AppCompatActivity {
 
         imageView = findViewById(R.id.imageView);
 
+
         Button button3 = findViewById(R.id.button3);
         button3.setOnClickListener(view -> {
             if (image_Val == 1) {
