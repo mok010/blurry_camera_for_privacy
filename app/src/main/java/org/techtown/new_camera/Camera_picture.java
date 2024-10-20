@@ -292,6 +292,3 @@ public class Camera_picture extends AppCompatActivity {
         executor.shutdownNow();
     }
 }
-
-
-
