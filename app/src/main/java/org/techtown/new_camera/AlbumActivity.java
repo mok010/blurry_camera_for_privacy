@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -23,6 +24,10 @@ import com.google.mlkit.vision.face.Face;
 import com.google.mlkit.vision.face.FaceLandmark;
 import com.google.mlkit.vision.pose.Pose;
 import com.google.mlkit.vision.pose.PoseLandmark;
+
+import org.techtown.new_camera.BitmapUtil;
+import org.techtown.new_camera.FingerMainActivity;
+import org.techtown.new_camera.ImageProcessor;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -36,8 +41,10 @@ public class AlbumActivity extends AppCompatActivity {
 
     ImageView imageView;
     Bitmap photoBitmap;
-    Uri originalImageUri;  // 원본 이미지의 URI를 저장할 변수
+    Uri originalImageUri;
     int image_Val = 0;
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,22 +55,24 @@ public class AlbumActivity extends AppCompatActivity {
         button2.setOnClickListener(view -> {
             Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setType("image/*");
-            startActivityForResult(intent, 1);  // 이미지를 선택할 때 ActivityResult 사용
+            startActivityForResult(intent, 1);
         });
 
         imageView = findViewById(R.id.imageView);
 
         Button button3 = findViewById(R.id.button3);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-
         button3.setOnClickListener(view -> {
             if (image_Val == 1) {
-                ProgressDialog dialog = new ProgressDialog(AlbumActivity.this);
-                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                dialog.setMessage("보호중입니다...");
-                dialog.show();
+                // 터치 이벤트 비활성화
+                getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
 
-                // 포즈 감지 및 블러링 처리
+                // ProgressDialog 추가
+                progressDialog = new ProgressDialog(AlbumActivity.this);
+                progressDialog.setMessage("보호중입니다...");
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+
                 executor.execute(() -> {
                     try {
                         List<Face> faces = ImageProcessor.processInputImage(photoBitmap, AlbumActivity.this).get();
@@ -71,10 +80,9 @@ public class AlbumActivity extends AppCompatActivity {
 
                         Bitmap blurredBitmap = photoBitmap.copy(Bitmap.Config.ARGB_8888, true);
 
-                        // 얼굴 블러 처리 (눈 중심)
                         if (FingerMainActivity.isIrisBlurringOn) {
                             for (Face face : faces) {
-                                float eyeRadius = face.getBoundingBox().width() * 0.03f;  // 얼굴 크기에 따른 반경 설정
+                                float eyeRadius = face.getBoundingBox().width() * 0.03f;
 
                                 FaceLandmark leftEye = face.getLandmark(FaceLandmark.LEFT_EYE);
                                 if (leftEye != null) {
@@ -90,8 +98,7 @@ public class AlbumActivity extends AppCompatActivity {
                             }
                         }
 
-                        // 손 블러 처리
-                        if(FingerMainActivity.isFingerprintBlurringOn){
+                        if (FingerMainActivity.isFingerprintBlurringOn) {
                             PoseLandmark leftWrist = pose.getPoseLandmark(PoseLandmark.LEFT_WRIST);
                             PoseLandmark leftIndex = pose.getPoseLandmark(PoseLandmark.LEFT_INDEX);
                             PoseLandmark leftPinky = pose.getPoseLandmark(PoseLandmark.LEFT_PINKY);
@@ -100,7 +107,6 @@ public class AlbumActivity extends AppCompatActivity {
                             PoseLandmark rightIndex = pose.getPoseLandmark(PoseLandmark.RIGHT_INDEX);
                             PoseLandmark rightPinky = pose.getPoseLandmark(PoseLandmark.RIGHT_PINKY);
 
-                            // 왼손 사각형 영역 블러 처리
                             if (leftWrist != null && leftIndex != null) {
                                 Rect leftHandRect = getHandRectRegion(leftWrist, leftIndex);
                                 PointF leftIndexPos = leftIndex.getPosition();
@@ -117,7 +123,6 @@ public class AlbumActivity extends AppCompatActivity {
                                 blurredBitmap = BitmapUtil.blurRectangularRegion(AlbumActivity.this, blurredBitmap, leftHandRect, leftIndexPos);
                             }
 
-                            // 오른손 사각형 영역 블러 처리
                             if (rightWrist != null && rightIndex != null) {
                                 Rect rightHandRect = getHandRectRegion(rightWrist, rightIndex);
                                 PointF rightIndexPos = rightIndex.getPosition();
@@ -135,27 +140,31 @@ public class AlbumActivity extends AppCompatActivity {
                             }
                         }
 
-                        // 블러 처리 후 앨범에 저장
-                        Uri savedUri = saveImageToGallery(blurredBitmap);  // 블러 처리 후 이미지 저장
-
-                        if (savedUri != null) {
-                            // 블러 이미지 저장 성공 시 원본 이미지 삭제
-                            if (originalImageUri != null) {
-                                deleteTempFile(originalImageUri); // 원본 이미지 삭제
-                            }
+                        Uri savedUri = saveImageToGallery(blurredBitmap);
+                        if (savedUri != null && originalImageUri != null) {
+                            deleteTempFile(originalImageUri);
                         }
 
-                        // UI 업데이트
                         Bitmap finalBlurredBitmap = blurredBitmap;
                         runOnUiThread(() -> {
                             imageView.setImageBitmap(finalBlurredBitmap);
-                            dialog.dismiss();
+                            // 터치 이벤트 활성화
+                            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                            if (progressDialog != null && progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
                             Toast.makeText(AlbumActivity.this, "변환 및 저장이 완료되었습니다:)", Toast.LENGTH_SHORT).show();
                         });
 
                     } catch (Exception e) {
                         e.printStackTrace();
-                        runOnUiThread(dialog::dismiss);
+                        runOnUiThread(() -> {
+                            // 터치 이벤트 활성화
+                            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                            if (progressDialog != null && progressDialog.isShowing()) {
+                                progressDialog.dismiss();
+                            }
+                        });
                     }
                 });
 
@@ -172,41 +181,36 @@ public class AlbumActivity extends AppCompatActivity {
 
         if (requestCode == 1 && resultCode == RESULT_OK) {
             Uri uri = data.getData();
-            originalImageUri = uri;  // 원본 이미지의 URI 저장 (삭제 용도로 사용)
+            originalImageUri = uri;
             Log.d("이미지주소", String.valueOf(uri));
-            photoBitmap = getBitmapFromUri(uri);  // 비트맵으로 변환
+            photoBitmap = getBitmapFromUri(uri);
             imageView.setImageBitmap(photoBitmap);
             image_Val = 1;
         }
     }
 
-    // 이미지를 URI에서 비트맵으로 변환하는 메서드
     private Bitmap getBitmapFromUri(Uri uri) {
-        try {
-            ParcelFileDescriptor parcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r");
+        try (ParcelFileDescriptor parcelFileDescriptor = getContentResolver().openFileDescriptor(uri, "r")) {
             FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-            Bitmap bitmap = BitmapFactory.decodeFileDescriptor(fileDescriptor);
-            parcelFileDescriptor.close();
-            return bitmap;
+            return BitmapFactory.decodeFileDescriptor(fileDescriptor);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    // 블러링된 이미지를 앨범에 저장하는 메서드
     private Uri saveImageToGallery(Bitmap bitmap) {
         ContentValues values = new ContentValues();
-        values.put(MediaStore.Images.Media.DISPLAY_NAME, System.currentTimeMillis() + ".jpg");  // 파일명
+        values.put(MediaStore.Images.Media.DISPLAY_NAME, System.currentTimeMillis() + ".jpg");
         values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES);  // 앨범 경로
+        values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES);
 
         Uri imageUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
 
         try (OutputStream out = getContentResolver().openOutputStream(imageUri)) {
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);  // JPEG로 저장
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
             Toast.makeText(this, "이미지가 앨범에 저장되었습니다.", Toast.LENGTH_SHORT).show();
-            return imageUri; // 저장된 이미지의 URI 반환
+            return imageUri;
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "이미지 저장에 실패했습니다.", Toast.LENGTH_SHORT).show();
@@ -214,7 +218,6 @@ public class AlbumActivity extends AppCompatActivity {
         }
     }
 
-    // 원본 이미지를 삭제하는 메서드
     private void deleteTempFile(Uri fileUri) {
         if (fileUri != null && "file".equals(fileUri.getScheme())) {
             File file = new File(fileUri.getPath());
@@ -233,26 +236,20 @@ public class AlbumActivity extends AppCompatActivity {
     }
 
     private Rect getHandRectRegion(PoseLandmark wrist, PoseLandmark index) {
-        // 손목에서 검지까지의 거리 계산
         float distance = (float) Math.sqrt(
                 Math.pow(index.getPosition().x - wrist.getPosition().x, 2) +
                         Math.pow(index.getPosition().y - wrist.getPosition().y, 2)
         );
 
-        // 검지 좌표를 사각형의 중심으로 설정
         float centerX = index.getPosition().x;
         float centerY = index.getPosition().y;
+        float halfSide = distance;
 
-        // 거리의 2배를 한 변으로 하는 사각형 계산
-        float halfSide =  (distance ); // 손목까지의 거리의 2배가 한 변이므로, halfSide는 거리 그대로 사용
-
-        // 사각형의 좌상단과 우하단 좌표 계산
         float left = centerX - halfSide;
         float top = centerY - halfSide;
         float right = centerX + halfSide;
         float bottom = centerY + halfSide;
 
-        // 정사각형 Rect 반환
-        return new Rect((int)left, (int)top, (int)right, (int)bottom);
+        return new Rect((int) left, (int) top, (int) right, (int) bottom);
     }
 }
