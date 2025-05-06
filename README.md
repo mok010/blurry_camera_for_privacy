@@ -14,11 +14,11 @@ A camera application that automatically blurs iris and fingerprints to safely pr
 
 |                            이름                             |              역할              |                           책임                            |
 | :---------------------------------------------------------: | :----------------------------: | :-------------------------------------------------------: |
-|   [mok010(목은경)](https://github.com/mok010)     |       Team Leader 👑, Android        |                전체적인 프로젝트 관리 담당                |
-|   [minus_k(김민우)](https://github.com/minus43)   |        Android         |               Android 기능 구현 및 관리              |
-|   [saesongtree(박진서)](https://github.com/saesongtree)   |        Android         |               Android 기능 구현 및 관리               |
-|   [CHOYONGGEUN(조용근)](https://github.com/CHOYONGGEUN)   |        Android         |            Android 기능 구현 및 관리                  |
-|   [hanjjaeni(한채원)](https://github.com/hanjjaeni)   |        Android         |              Android 기능 구현 및 관리                |
+|   [mok010](https://github.com/mok010)     |       Team Leader 👑, Android        |                전체적인 프로젝트 관리 담당                |
+|   [minus_k](https://github.com/minus43)   |        Android         |               Android 기능 구현 및 관리              |
+|   [saesongtree](https://github.com/saesongtree)   |        Android         |               Android 기능 구현 및 관리               |
+|   [CHOYONGGEUN](https://github.com/CHOYONGGEUN)   |        Android         |            Android 기능 구현 및 관리                  |
+|   [hanjjaeni](https://github.com/hanjjaeni)   |        Android         |              Android 기능 구현 및 관리                |
 
 -------------------
 
